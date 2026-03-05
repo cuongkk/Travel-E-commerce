@@ -1,4 +1,6 @@
-const categoryModel = require("../../models/category.model.js");
+const { buildCategoryTree } = require("../../helpers/category.helper.js");
+
+const Category = require("../../models/category.model.js");
 
 module.exports.list = (req, res) => {
   res.render("admin/pages/category-list", {
@@ -6,9 +8,16 @@ module.exports.list = (req, res) => {
   });
 };
 
-module.exports.create = (req, res) => {
+module.exports.create = async (req, res) => {
+  const categoryList = await Category.find({
+    deleted: false,
+  });
+
+  const categoryTree = buildCategoryTree(categoryList);
+
   res.render("admin/pages/category-create", {
     pageTitle: "Tạo danh mục",
+    categoryList: categoryTree,
   });
 };
 
@@ -22,7 +31,7 @@ module.exports.createPost = async (req, res) => {
   if (req.body.position) {
     req.body.position = parseInt(req.body.position);
   } else {
-    const record = await categoryModel.findOne().sort({ position: "desc" });
+    const record = await Category.findOne().sort({ position: "desc" });
 
     if (record) {
       req.body.position = record.position + 1;
@@ -32,7 +41,7 @@ module.exports.createPost = async (req, res) => {
   }
   req.body.createdBy = res.locals.account._id;
 
-  const newRecord = new categoryModel(req.body);
+  const newRecord = new Category(req.body);
 
   await newRecord.save();
 
