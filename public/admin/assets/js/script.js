@@ -91,9 +91,20 @@ if (listFilepondImage.length > 0) {
   FilePond.registerPlugin(FilePondPluginFileValidateType);
 
   listFilepondImage.forEach((inputElement) => {
+    const imageDefault = inputElement.getAttribute("image-default");
+    let files = null;
+    if (imageDefault) {
+      files = [
+        {
+          source: imageDefault,
+        },
+      ];
+    }
+
     filepond[inputElement.name] = FilePond.create(inputElement, {
       labelIdle: "+",
       acceptedFileTypes: ["image/*"],
+      files: files,
     });
   });
 }
@@ -167,10 +178,10 @@ if (categoryCreateForm) {
         .then((res) => res.json())
         .then((data) => {
           if (data.result == "error") {
-            notyf.error(data.message);
+            notify.error(data.message);
           }
           if (data.result == "success") {
-            notyf.success(data.message);
+            Notify(data.result, data.message);
             window.location.reload();
             // window.location.href = `/${pathAdmin}/category`;
           }
@@ -179,6 +190,54 @@ if (categoryCreateForm) {
 }
 
 // End Category Create Form
+
+// Category Edit Form
+const categoryEditForm = document.querySelector("#category-edit-form");
+if (categoryEditForm) {
+  const validator = new JustValidate("#category-edit-form");
+
+  validator
+    .addField("#name", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập tên danh mục!",
+      },
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const name = event.target.name.value;
+      const parent = event.target.parent.value;
+      const position = event.target.position.value;
+      const status = event.target.status.value;
+      const avatar = filepond.avatar.getFile()?.file;
+      const description = tinymce.get("description").getContent();
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("parent", parent);
+      formData.append("position", position);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+      formData.append("description", description);
+
+      fetch(`/${pathAdmin}/category/edit/${id}`, {
+        method: "PATCH",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+          }
+        });
+    });
+}
+// End Category Edit Form
 
 //Tour Create Form
 const tourCreateForm = document.querySelector("#tour-create-form");
@@ -488,3 +547,247 @@ if (sider) {
   });
 }
 //End sider
+
+// button-delete
+const listButtonDelete = document.querySelectorAll("[button-delete]");
+if (listButtonDelete.length > 0) {
+  listButtonDelete.forEach((button) => {
+    button.addEventListener("click", () => {
+      const dataApi = button.getAttribute("data-api");
+      fetch(dataApi, {
+        method: "PATCH",
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            Notify(data.code, data.message);
+            window.location.reload();
+          }
+        });
+    });
+  });
+}
+// End button-delete
+
+// filter-status
+const filterStatus = document.querySelector("[filter-status]");
+if (filterStatus) {
+  const url = new URL(window.location.href);
+
+  filterStatus.addEventListener("change", () => {
+    const value = filterStatus.value;
+    if (value) {
+      url.searchParams.set("status", value);
+    } else {
+      url.searchParams.delete("status");
+    }
+    window.location.href = url.href;
+  });
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("status");
+  if (valueCurrent) {
+    filterStatus.value = valueCurrent;
+  }
+}
+// End filter-status
+
+// filter-created-by
+const filterCreatedBy = document.querySelector("[filter-created-by]");
+if (filterCreatedBy) {
+  const url = new URL(window.location.href);
+
+  filterCreatedBy.addEventListener("change", () => {
+    const value = filterCreatedBy.value;
+    if (value) {
+      url.searchParams.set("createdBy", value);
+    } else {
+      url.searchParams.delete("createdBy");
+    }
+    window.location.href = url.href;
+  });
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("createdBy");
+  if (valueCurrent) {
+    filterCreatedBy.value = valueCurrent;
+  }
+}
+// End filter-created-by
+
+// filter-start-date
+const filterStartDate = document.querySelector("[filter-start-date]");
+if (filterStartDate) {
+  const url = new URL(window.location.href);
+
+  filterStartDate.addEventListener("change", () => {
+    const value = filterStartDate.value;
+    if (value) {
+      url.searchParams.set("startDate", value);
+    } else {
+      url.searchParams.delete("startDate");
+    }
+    window.location.href = url.href;
+  });
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("startDate");
+  if (valueCurrent) {
+    filterStartDate.value = valueCurrent;
+  }
+}
+// End filter-start-date
+
+// filter-end-date
+const filterEndDate = document.querySelector("[filter-end-date]");
+if (filterEndDate) {
+  const url = new URL(window.location.href);
+
+  filterEndDate.addEventListener("change", () => {
+    const value = filterEndDate.value;
+    if (value) {
+      url.searchParams.set("endDate", value);
+    } else {
+      url.searchParams.delete("endDate");
+    }
+    window.location.href = url.href;
+  });
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("endDate");
+  if (valueCurrent) {
+    filterEndDate.value = valueCurrent;
+  }
+}
+// End filter-end-date
+
+// filter-reset
+const filterReset = document.querySelector("[filter-reset]");
+if (filterReset) {
+  const url = new URL(window.location.href);
+
+  filterReset.addEventListener("click", () => {
+    url.searchParams.delete("status");
+    url.searchParams.delete("createdBy");
+    url.searchParams.delete("startDate");
+    url.searchParams.delete("endDate");
+    window.location.href = url.href;
+  });
+}
+// End filter-reset
+
+// checkAll
+const inputCheckAll = document.querySelector(`input[name="checkAll"]`);
+if (inputCheckAll) {
+  inputCheckAll.addEventListener("click", () => {
+    const listInputCheckItem = document.querySelectorAll(`input[name="checkItem"]`);
+    listInputCheckItem.forEach((input) => {
+      input.checked = inputCheckAll.checked;
+    });
+  });
+}
+// End checkAll
+
+// change-multi
+const changeMulti = document.querySelector("[change-multi]");
+if (changeMulti) {
+  const button = changeMulti.querySelector("button");
+  const select = changeMulti.querySelector("select");
+  const dataApi = changeMulti.getAttribute("data-api");
+
+  button.addEventListener("click", () => {
+    const listInputChecked = document.querySelectorAll(`input[name="checkItem"]:checked`);
+    const listId = [];
+    listInputChecked.forEach((input) => {
+      listId.push(input.value);
+    });
+    const option = select.value;
+
+    if (listId.length == 0) {
+      notify.error("Vui lòng chọn ít nhất 1 bản ghi!");
+      return;
+    }
+
+    if (!option) {
+      notify.error("Vui lòng chọn hành động để áp dụng!");
+      return;
+    }
+
+    const dataFinal = {
+      listId: listId,
+      option: option,
+    };
+
+    fetch(dataApi, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(dataFinal),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.code == "error") {
+          notify.error(data.message);
+        }
+
+        if (data.code == "success") {
+          drawNotify(data.code, data.message);
+          window.location.reload();
+        }
+      });
+  });
+}
+// End change-multi
+
+// search
+const inputSearch = document.querySelector("[search]");
+if (inputSearch) {
+  const url = new URL(window.location.href);
+
+  inputSearch.addEventListener("keyup", (event) => {
+    if (event.code == "Enter") {
+      const value = inputSearch.value.trim();
+      if (value) {
+        url.searchParams.set("keyword", value);
+      } else {
+        url.searchParams.delete("keyword");
+      }
+      window.location.href = url.href;
+    }
+  });
+
+  // Hiển thị giá trị mặc định
+  const valueCurrent = url.searchParams.get("keyword");
+  if (valueCurrent) {
+    inputSearch.value = valueCurrent;
+  }
+}
+// End search
+
+// box-pagination
+const boxPagination = document.querySelector("[box-pagination]");
+if (boxPagination) {
+  const url = new URL(window.location.href);
+
+  boxPagination.addEventListener("change", () => {
+    const value = boxPagination.value;
+    if (value) {
+      url.searchParams.set("page", value);
+    } else {
+      url.searchParams.delete("page");
+    }
+    window.location.href = url.href;
+  });
+
+  // Hiển thị lựa chọn mặc định
+  const valueCurrent = url.searchParams.get("page");
+  if (valueCurrent) {
+    boxPagination.value = valueCurrent;
+  }
+}
+// End box-pagination

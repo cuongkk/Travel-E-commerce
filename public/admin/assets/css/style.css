@@ -200,11 +200,13 @@ textarea {
 /* End Form-account */
 
 /* Text */
-.text-left {
+.text-left,
+.text-left div {
   text-align: left;
 }
 
-.text-right {
+.text-right,
+.text-right div {
   text-align: right;
 }
 
@@ -1503,21 +1505,27 @@ h1.box-title {
   border: 1px solid #d5d5d5;
   display: inline-flex;
   border-radius: 8px;
+  overflow: hidden;
 }
 
-.box-actions a {
+.box-actions a,
+.box-actions button {
   padding: 8.5px 16.5px;
   display: inline-block;
   font-size: 15px;
   color: rgba(0, 0, 0, 0.6);
+  border: 0;
   border-right: 1px solid #d5d5d5;
+  background-color: #fff;
+  cursor: pointer;
 }
 
 .box-actions .inner-remove {
   color: #ef3826;
 }
 
-.box-actions a:last-child {
+.box-actions a:last-child,
+.box-actions button:last-child {
   border-right: 0;
 }
 
@@ -1672,7 +1680,9 @@ h1.box-title {
   stroke-linejoin: round;
   stroke-width: 2px;
   top: 0;
-  transition: stroke-dasharray var(--dur), stroke-dashoffset var(--dur);
+  transition:
+    stroke-dasharray var(--dur),
+    stroke-dashoffset var(--dur);
 }
 
 .checkbox-wrapper-30 .checkbox svg,

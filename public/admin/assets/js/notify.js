@@ -1,5 +1,5 @@
-// Notyf
-const notyf = new Notyf({
+// Notify
+const notify = new Notyf({
   duration: 3000,
   position: {
     x: "center",
@@ -13,10 +13,10 @@ let notifyMessage = sessionStorage.getItem("notify");
 if (notifyMessage) {
   notifyMessage = JSON.parse(notifyMessage);
   if (notifyMessage.result == "success") {
-    notyf.success(notifyMessage);
+    notify.success(notifyMessage);
   }
   if (notifyMessage.result == "error") {
-    notyf.error(notifyMessage);
+    notify.error(notifyMessage);
   }
   sessionStorage.removeItem("notify");
 }

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const accountAdmin = require("../../models/account-admin.models.js");
+const accountAdmin = require("../../models/account-admin.model.js");
 
 module.exports.verifyToken = async (req, res, next) => {
   const token = req.cookies.token;

@@ -25,3 +25,27 @@ module.exports.createPost = async (req, res, next) => {
 
   next();
 };
+
+module.exports.changeMultiPatch = async (req, res, next) => {
+  const schema = Joi.object({
+    listId: Joi.array().required().messages({
+      "any.empty": "Vui lòng chọn ít nhất 1 bản ghi!",
+    }),
+    option: Joi.string().required().messages({
+      "string.empty": "Vui lòng chọn hành động để áp dụng!",
+    }),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) {
+    const errorMessage = error.details[0].message;
+
+    res.json({
+      code: "error",
+      message: errorMessage,
+    });
+    return;
+  }
+
+  next();
+};

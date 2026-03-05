@@ -11,38 +11,38 @@ block main
 					.inner-item.inner-label
 						<i class="fa-solid fa-filter"></i> Bộ lọc
 					.inner-item
-						select
+						select(filter-status)
 							option(value="") Trạng thái
-							option(value="") Hoạt động
-							option(value="") Tạm dừng
+							option(value="active") Hoạt động
+							option(value="inactive") Tạm dừng
 					.inner-item
-						select
+						select(filter-created-by)
 							option(value="") Người tạo
-							option(value="") Lê Văn A
-							option(value="") Lê Văn B
+							each item in accountAdminList
+								option(value=item.id) #{item.fullName}
 					.inner-item.inner-date
-						input(type="date")
+						input(type="date" filter-start-date)
 						span -
-						input(type="date")
-					.inner-item.inner-reset
+						input(type="date" filter-end-date	)
+					.inner-item.inner-reset(filter-reset)
 						<i class="fa-solid fa-rotate-left"></i> Xóa bộ lọc
 			//- End Section 4
 
 			//- Section 5
 			.section-5
 				.inner-wrap
-					.inner-change-status
+					.inner-change-status(change-multi data-api=`/${pathAdmin}/category/change-multi`)
 						.inner-item
 							select
 								option(value="") -- Hành động --
-								option(value="") Hoạt động
-								option(value="") Dừng hoạt động
-								option(value="") Xóa
+								option(value="active") Hoạt động
+								option(value="inactive") Dừng hoạt động
+								option(value="delete") Xóa
 						.inner-item
 							button Áp dụng
 					.inner-search
 						<i class="fa-solid fa-magnifying-glass"></i>
-						input(type="text" placeholder="Tìm kiếm")
+						input(type="text" placeholder="Tìm kiếm" search)
 					.inner-button-create
 						a(href=`/${pathAdmin}/category/create`)  + Tạo mới
 			//- End Section 5
@@ -57,60 +57,47 @@ block main
 								+checkbox-30("", "")
 							th.text-left Tên danh mục
 							th.text-center Ảnh đại diện
-							th.text-center Vị trí
 							th.text-center Trạng thái
 							th.text-left Tạo bởi
 							th.text-left Cập nhật bởi
 							th.text-left Hành động
-					tbody 
-						tr 
-							td.text-left
-								+checkbox-30("", "")
-							td.text-left Danh mục 1
-							td.text-center
-								img.inner-image
-							td.text-center 1
-							td.text-center
-								.status.status-green Hoạt động 
-							td.text-left
-								div Lê Văn A
-								div.inner-small 16:30 - 20/10/2024
-							td.text-left
-								div Lê Văn A
-								div.inner-small 16:30 - 20/10/2024
-							td.text-left
-								.box-actions 
-									a(href="#" class="inner-edit")
-										<i class="fa-solid fa-pen-to-square"></i>
-									a(href="#" class="inner-remove")
-										<i class="fa-solid fa-trash-can"></i>
-						tr 
-							td.text-left
-								+checkbox-30("", "")
-							td.text-left Danh mục 1
-							td.text-center
-								img.inner-image
-							td.text-center 1
-							td.text-center
-								.status.status-red Tạm dừng
-							td.text-left
-								div Lê Văn A
-								div.inner-small 16:30 - 20/10/2024
-							td.text-left
-								div Lê Văn A
-								div.inner-small 16:30 - 20/10/2024
-							td.text-left
-								.box-actions 
-									a(href="#" class="inner-edit")
-										<i class="fa-solid fa-pen-to-square"></i>
-									a(href="#" class="inner-remove")
-										<i class="fa-solid fa-trash-can"></i>
+					tbody
+						each item in categoryList
+							tr
+								td.text-left
+									+checkbox-30("", "")
+								td.text-left #{item.name}
+								td.text-center
+									img(src=item.avatar class="inner-avatar")
+								td.text-center
+									if (item.status == "active")
+										.status.status-green Hoạt động
+									else if (item.status == "inactive")
+										.status.status-red Tạm dừng
+								td.text-left
+									if (item.createdByFullName)
+										div #{item.createdByFullName}
+										div.inner-small #{item.createdAtFormat}
+								td.text-left
+									if (item.updatedByFullName)
+										div #{item.updatedByFullName}
+										div.inner-small #{item.updatedAtFormat}
+								td.text-left
+									.box-actions 
+										a(href=`/${pathAdmin}/category/edit/${item._id}` class="inner-edit")
+											<i class="fa-solid fa-pen-to-square"></i>
+										button(
+										class="inner-remove"
+										button-delete
+										data-api=`/${pathAdmin}/category/delete/${item.id}`
+										)
+
+											<i class="fa-solid fa-trash-can"></i>
 			.pagination
-				span(class="inner-label") Hiển thị 1 - 9 của 78
-				select(class="inner-pagination")
-					option Trang 1
-					option Trang 2
-					option Trang 3
+				span(class="inner-label") Hiển thị #{pagination.skip +1 } - #{pagination.skip + categoryList.length} của #{pagination.totalRecord}
+				select(class="inner-pagination" box-pagination)
+					- for (let i = 1; i <= pagination.totalPage; i++)
+						option(value=i) Trang #{i}
 		//- End Section 6
 
 		

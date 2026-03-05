@@ -1,4 +1,4 @@
-const accountAdmin = require("../../models/account-admin.models.js");
+const accountAdmin = require("../../models/account-admin.model.js");
 const forgotPasswordModel = require("../../models/forgot-password.model.js");
 const generateHelper = require("../../helpers/generate.helper.js");
 const mailHelper = require("../../helpers/mail.helper.js");
@@ -174,7 +174,7 @@ module.exports.otpPasswordPost = async (req, res) => {
       email: existAccount.email,
     },
     process.env.JWT_SECRET_KEY,
-    { expiresIn: "1d" }
+    { expiresIn: "1d" },
   );
 
   // Lưu token vào cookie
