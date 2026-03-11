@@ -22,12 +22,37 @@ module.exports.createPost = (req, res, next) => {
     time: Joi.string().allow(""),
     vehicle: Joi.string().allow(""),
     departureDate: Joi.string().allow(""),
+    endDate: Joi.string().allow(""),
     information: Joi.string().allow(""),
     schedules: Joi.string().allow(""),
   });
 
   const { error } = schema.validate(req.body);
 
+  if (error) {
+    const errorMessage = error.details[0].message;
+
+    res.json({
+      code: "error",
+      message: errorMessage,
+    });
+    return;
+  }
+
+  next();
+};
+
+module.exports.changeMultiPatch = (req, res, next) => {
+  const schema = Joi.object({
+    listId: Joi.array().required().messages({
+      "any.empty": "Vui lòng chọn ít nhất 1 bản ghi!",
+    }),
+    option: Joi.string().required().messages({
+      "string.empty": "Vui lòng chọn hành động để áp dụng!",
+    }),
+  });
+
+  const { error } = schema.validate(req.body);
   if (error) {
     const errorMessage = error.details[0].message;
 

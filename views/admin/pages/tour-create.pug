@@ -11,8 +11,8 @@ block main
 					label.inner-label(for="name") Tên tour
 					input(type="text" id="name" name="name" placeholder="Nhập tên tour")
 				.inner-group 
-					label.inner-label(for="parent") Danh mục 
-					select(id="parent" name="parent")
+					label.inner-label(for="category") Danh mục 
+					select(id="category" name="category")
 						option(value="") -- Chọn danh mục --
 						+options(categoryList)
 				.inner-group 
@@ -21,8 +21,8 @@ block main
 				.inner-group 
 					label.inner-label(for="status") Trạng thái
 					select(id="status" name="status")
-						option(value="1") Hoạt động
-						option(value="2") Tạm dừng
+						option(value="active") Hoạt động
+						option(value="inactive") Tạm dừng
 				.inner-group.inner-two-col
 					label.inner-label(for="avatar") Ảnh đại diện
 					.inner-upload-image
@@ -32,25 +32,25 @@ block main
 					.inner-list
 						.inner-item 
 							label.inner-label(for="old-price-adult") Người lớn
-							input(type="text" id="old-price-adult" name="oldPriceAdult") 
+							input(type="text" id="old-price-adult" name="priceAdult") 
 						.inner-item 
 							label.inner-label(for="old-price-child") Trẻ em
-							input(type="text" id="old-price-child" name="oldPriceChild") 
+							input(type="text" id="old-price-child" name="priceChildren") 
 						.inner-item
 							label.inner-label(for="old-price-baby") Em bé
-							input(type="text" id="old-price-baby" name="oldPriceBaby") 
+							input(type="text" id="old-price-baby" name="priceBaby") 
 				.inner-group 
 					label.inner-label Giá mới
 					.inner-list
 						.inner-item 
 							label.inner-label(for="new-price-adult") Người lớn
-							input(type="text" id="new-price-adult" name="newPriceAdult") 
+							input(type="text" id="new-price-adult" name="priceNewAdult") 
 						.inner-item 
 							label.inner-label(for="new-price-child") Trẻ em
-							input(type="text" id="new-price-child" name="newPriceChild") 
+							input(type="text" id="new-price-child" name="priceNewChildren") 
 						.inner-item
 							label.inner-label(for="new-price-baby") Em bé
-							input(type="text" id="new-price-baby" name="newPriceBaby") 
+							input(type="text" id="new-price-baby" name="priceNewBaby") 
 				.inner-group 
 					label.inner-label Còn lại 
 					.inner-list
@@ -59,29 +59,26 @@ block main
 							input(type="text" id="adult" name="stockAdult") 
 						.inner-item 
 							label.inner-label(for="child") Trẻ em
-							input(type="text" id="child" name="stockChild") 
+							input(type="text" id="child" name="stockChildren") 
 						.inner-item
 							label.inner-label(for="baby") Em bé
 							input(type="text" id="baby" name="stockBaby")
 				.inner-group 
-					label.inner-label Những địa điểm 
+					label.inner-label Những địa điểm
 					.inner-checkbox
 						each item in cityList
 							.inner-checkbox-item 
-								+checkbox-30("location", `location-${item.id}`, `id-${item.id}`)
-								label(for=`location-${item.id}`) #{item.name}
-				.inner-group 
-					label.inner-label(for="duration") Thời gian
-					input(type="text" id="duration" name="duration" placeholder="Nhập thời gian")
-				.inner-group
-					label.inner-label(for="transportation") Phương tiện
-					input(type="text" id="transportation" name="transportation" placeholder="Nhập phương tiện")
+								+checkbox-30("locations", `locations-${item.id}`, item.id)
+								label(for=`locations-${item.id}`) #{item.name}
 				.inner-group
 					label.inner-label(for="departure-date") Ngày khởi hành
 					input(type="date" id="departure-date" name="departureDate" placeholder="Nhập ngày khởi hành")
+				.inner-group 
+					label.inner-label(for="end-date") Ngày kết thúc
+					input(type="date" id="end-date" name="endDate" placeholder="Nhập ngày kết thúc")
 				.inner-group.inner-two-col
-					label.inner-label(for="description") Thông tin tour 
-					textarea(id="description" name="description")
+					label.inner-label(for="information") Thông tin tour 
+					textarea(id="information" name="information" textarea-mce)
 				.inner-group.inner-two-col
 					label.inner-label Lịch trình tour
 					.inner-schedule

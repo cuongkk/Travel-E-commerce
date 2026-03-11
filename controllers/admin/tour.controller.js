@@ -96,6 +96,17 @@ module.exports.createPost = async (req, res) => {
   req.body.stockBaby = req.body.stockBaby ? parseInt(req.body.stockBaby) : 0;
   req.body.locations = req.body.locations ? JSON.parse(req.body.locations) : [];
   req.body.departureDate = req.body.departureDate ? new Date(req.body.departureDate) : null;
+  req.body.endDate = req.body.endDate ? new Date(req.body.endDate) : null;
+
+  // Tính thời gian tour (số ngày, làm tròn lên)
+  if (req.body.departureDate && req.body.endDate) {
+    const diffMs = req.body.endDate.getTime() - req.body.departureDate.getTime();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const days = Math.max(1, Math.ceil(diffMs / dayMs));
+    req.body.time = `${days} ngày`;
+  } else {
+    req.body.time = "";
+  }
   req.body.schedules = req.body.schedules ? JSON.parse(req.body.schedules) : [];
   req.body.createdBy = req.account.id;
 
@@ -227,7 +238,19 @@ module.exports.editPatch = async (req, res) => {
     req.body.stockChildren = req.body.stockChildren ? parseInt(req.body.stockChildren) : 0;
     req.body.stockBaby = req.body.stockBaby ? parseInt(req.body.stockBaby) : 0;
     req.body.locations = req.body.locations ? JSON.parse(req.body.locations) : [];
-    req.body.departureDate = req.body.departureDate ? new Date(req.body.departureDate) : null;
+    req.body.vehicle = req.body.vehicle || tourDetail.vehicle || "";
+    req.body.departureDate = req.body.departureDate ? new Date(req.body.departureDate) : tourDetail.departureDate || null;
+    req.body.endDate = req.body.endDate ? new Date(req.body.endDate) : tourDetail.endDate || null;
+
+    // Tính lại thời gian tour khi chỉnh sửa (số ngày, làm tròn lên)
+    if (req.body.departureDate && req.body.endDate) {
+      const diffMs = req.body.endDate.getTime() - req.body.departureDate.getTime();
+      const dayMs = 24 * 60 * 60 * 1000;
+      const days = Math.max(1, Math.ceil(diffMs / dayMs));
+      req.body.time = `${days} ngày`;
+    } else {
+      req.body.time = tourDetail.time || "";
+    }
     req.body.schedules = req.body.schedules ? JSON.parse(req.body.schedules) : [];
     req.body.updatedBy = req.account.id;
 
@@ -361,6 +384,89 @@ module.exports.destroyDel = async (req, res) => {
     res.json({
       code: "error",
       message: "Tour không tồn tại!",
+    });
+  }
+};
+
+module.exports.changeMultiPatch = async (req, res) => {
+  try {
+    const { listId, option } = req.body;
+
+    switch (option) {
+      case "active":
+      case "inactive":
+        await Tour.updateMany(
+          {
+            _id: { $in: listId },
+            deleted: false,
+          },
+          {
+            status: option,
+            updatedBy: req.account.id,
+          },
+        );
+        res.json({
+          code: "success",
+          message: "Đã cập nhật trạng thái tour!",
+        });
+        break;
+
+      case "delete":
+        await Tour.updateMany(
+          {
+            _id: { $in: listId },
+            deleted: false,
+          },
+          {
+            deleted: true,
+            deletedBy: req.account.id,
+            deletedAt: Date.now(),
+          },
+        );
+        res.json({
+          code: "success",
+          message: "Đã chuyển tour vào thùng rác!",
+        });
+        break;
+
+      case "undo":
+        await Tour.updateMany(
+          {
+            _id: { $in: listId },
+            deleted: true,
+          },
+          {
+            deleted: false,
+          },
+        );
+        res.json({
+          code: "success",
+          message: "Đã khôi phục các tour!",
+        });
+        break;
+
+      case "destroy":
+        await Tour.deleteMany({
+          _id: { $in: listId },
+          deleted: true,
+        });
+        res.json({
+          code: "success",
+          message: "Đã xóa vĩnh viễn các tour!",
+        });
+        break;
+
+      default:
+        res.json({
+          code: "error",
+          message: "Dữ liệu không hợp lệ!",
+        });
+        break;
+    }
+  } catch (error) {
+    res.json({
+      code: "error",
+      message: "Dữ liệu không hợp lệ!",
     });
   }
 };

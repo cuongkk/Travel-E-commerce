@@ -7,13 +7,12 @@ block main
 		//- Section 5
 		.section-5
 			.inner-wrap
-				.inner-change-status
+				.inner-change-status(change-multi data-api=`/${pathAdmin}/tour/change-multi`)
 					.inner-item
 						select
 							option(value="") -- Hành động --
-							option(value="") Hoạt động
-							option(value="") Dừng hoạt động
-							option(value="") Xóa
+							option(value="undo") Khôi phục
+							option(value="destroy") Xóa vĩnh viễn
 					.inner-item
 						button Áp dụng
 				.inner-search
@@ -28,12 +27,12 @@ block main
 					thead 
 						tr 
 							th.text-left
-								+checkbox-30("", "")
+								+checkbox-30("checkAll", "checkAll")
 							th.text-left Tên danh mục
 							th.text-center Ảnh đại diện
 							th.text-left Giá 
 							th.text-left Còn lại
-							th.text-center Trạng thái
+							th.text-center Trạng tháis
 							th.text-left Tạo bởi
 							th.text-left Cập nhật bởi
 							th.text-left Hành động
@@ -41,49 +40,48 @@ block main
 						each item in tourList
 							tr 
 								td.text-left
-									+checkbox-30("", "")
+									+checkbox-30("checkItem", `checkItem-${item.id}`, item.id)
 								td.text-left #{item.name}
 								td.text-center
-									img.inner-image(src="#{tour.avatar}" alt="#{tour.name}")
+									img.inner-avatar(src="#{tour.avatar}")
 								td.text-left 
 									div NL: #{item.priceNewAdult.toLocaleString("vi-VN")}đ
 									div TE: #{item.priceNewChildren.toLocaleString("vi-VN")}đ
 									div EB: #{item.priceNewBaby.toLocaleString("vi-VN")}đ
-							td.text-left 
-								div NL: #{item.stockAdult}
-								div TE: #{item.stockChildren}
-								div EB: #{item.stockBaby}
-							td.text-center
-								if (item.status == "active")
-									.tag.tag-green Hoạt động
-								else if (item.status == "inactive")
-									.tag.tag-red Tạm dừng
-							td.text-left
-								div #{item.createdByFullName}
-								div.inner-small #{item.createdAtFormat}
-							td.text-left
-								div #{item.deletedByFullName}
-								div.inner-small #{item.deletedAtFormat}
-							td.text-left
-								.box-actions 
-									button(
-                    class="inner-undo"
-                    button-undo
-                    data-api=`/${pathAdmin}/tour/undo/${item.id}`
-                    )
-										<i class="fa-solid fa-pen-to-square"></i>
-									button(
-                    class="inner-remove"
-                    button-destroy
-                    data-api=`/${pathAdmin}/tour/destroy/${item.id}`
-                    )
-
-										<i class="fa-solid fa-trash-can"></i>
+								td.text-left 
+									div NL: #{item.stockAdult}
+									div TE: #{item.stockChildren}
+									div EB: #{item.stockBaby}
+								td.text-center
+									if (item.status == "active")
+										.tag.tag-green Hoạt động
+									else if (item.status == "inactive")
+										.tag.tag-red Tạm dừng
+								td.text-left
+									div #{item.createdByFullName}
+									div.inner-small #{item.createdAtFormat}
+								td.text-left
+									div #{item.deletedByFullName}
+									div.inner-small #{item.deletedAtFormat}
+								td.text-left
+									.box-actions 
+										button(
+											class="inner-undo"
+											button-undo
+											data-api=`/${pathAdmin}/tour/undo/${item.id}`
+											)
+											<i class="fa-solid fa-undo"></i>
+										button(
+											class="inner-remove"
+											button-destroy
+											data-api=`/${pathAdmin}/tour/destroy/${item.id}`
+											)
+											<i class="fa-solid fa-trash-can"></i>
 		//- End Section 6
 
 		//- Section 7
 		.pagination
-			span(class="inner-label") Hiển thị 1 - 9 của 78
+			//-pan(class="inner-label") Hiển thị 1 - 9 của 78
 			select(class="inner-pagination")
 				option Trang 1
 				option Trang 2

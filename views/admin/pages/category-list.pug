@@ -54,7 +54,7 @@ block main
 					thead 
 						tr 
 							th.text-left
-								+checkbox-30("", "")
+								+checkbox-30("checkAll", "checkAll")
 							th.text-left Tên danh mục
 							th.text-center Ảnh đại diện
 							th.text-center Trạng thái
@@ -65,7 +65,7 @@ block main
 						each item in categoryList
 							tr
 								td.text-left
-									+checkbox-30("", "")
+									+checkbox-30("checkItem", `checkItem-${item.id}`, item.id)
 								td.text-left #{item.name}
 								td.text-center
 									img(src=item.avatar class="inner-avatar")
@@ -94,7 +94,7 @@ block main
 
 											<i class="fa-solid fa-trash-can"></i>
 			.pagination
-				span(class="inner-label") Hiển thị #{pagination.skip +1 } - #{pagination.skip + categoryList.length} của #{pagination.totalRecord}
+				//-span(class="inner-label") Hiển thị #{pagination.skip +1 } - #{pagination.skip + categoryList.length} của #{pagination.totalRecord}
 				select(class="inner-pagination" box-pagination)
 					- for (let i = 1; i <= pagination.totalPage; i++)
 						option(value=i) Trang #{i}

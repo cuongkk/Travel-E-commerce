@@ -177,13 +177,15 @@ if (categoryCreateForm) {
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.result == "error") {
+          const status = data.code || data.result;
+
+          if (status === "error") {
             notify.error(data.message);
           }
-          if (data.result == "success") {
-            Notify(data.result, data.message);
+
+          if (status === "success") {
+            Notify(status, data.message);
             window.location.reload();
-            // window.location.href = `/${pathAdmin}/category`;
           }
         });
     });
@@ -251,32 +253,42 @@ if (tourCreateForm) {
       },
     ])
     .onSuccess((event) => {
-      const name = event.target.name.value;
-      const parent = event.target.parent.value;
-      const position = event.target.position.value;
-      const status = event.target.status.value;
-      const avatar = filepond.avatar.getFile()?.file;
-      const oldPriceAdult = event.target.oldPriceAdult.value;
-      const oldPriceChild = event.target.oldPriceChild.value;
-      const oldPriceBaby = event.target.oldPriceBaby.value;
-      const newPriceAdult = event.target.newPriceAdult.value;
-      const newPriceChild = event.target.newPriceChild.value;
-      const newPriceBaby = event.target.newPriceBaby.value;
-      const stockAdult = event.target.stockAdult.value;
-      const stockChild = event.target.stockChild.value;
-      const stockBaby = event.target.stockBaby.value;
-      const location = [];
-      const duration = event.target.duration.value;
-      const transportation = event.target.transportation.value;
-      const departureDate = event.target.departureDate.value;
-      const description = event.target.description.value;
-      const schedule = [];
+      const form = event.target;
 
-      const listLocation = document.querySelectorAll('[name="location"]:checked');
+      const name = form.name.value;
+      const category = form.category.value;
+      const position = form.position.value;
+      const status = form.status.value;
+      const avatar = filepond.avatar?.getFile()?.file || null;
+
+      const priceAdult = form.priceAdult.value;
+      const priceChildren = form.priceChildren.value;
+      const priceBaby = form.priceBaby.value;
+
+      const priceNewAdult = form.priceNewAdult.value;
+      const priceNewChildren = form.priceNewChildren.value;
+      const priceNewBaby = form.priceNewBaby.value;
+
+      const stockAdult = form.stockAdult.value;
+      const stockChildren = form.stockChildren.value;
+      const stockBaby = form.stockBaby.value;
+
+      const locations = [];
+      const departureDate = form.departureDate.value;
+      const endDate = form.endDate.value;
+
+      const informationEditor = tinymce.get("information");
+      const information = informationEditor ? informationEditor.getContent() : form.information.value;
+
+      const schedules = [];
+
+      // locations
+      const listLocation = document.querySelectorAll('[name="locations"]:checked');
       listLocation.forEach((item) => {
-        location.push(item.value);
+        locations.push(item.value);
       });
 
+      // schedules
       const listScheduleItem = document.querySelectorAll(".inner-schedule .inner-schedule-item");
       listScheduleItem.forEach((item) => {
         const inputTitle = item.querySelector(".inner-input");
@@ -285,18 +297,21 @@ if (tourCreateForm) {
         const id = textareaDescription.id;
         const description = tinymce.get(id).getContent();
 
-        schedule.push({
+        schedules.push({
           title,
           description,
         });
       });
+
       // Tạo FormData
       const formData = new FormData();
       formData.append("name", name);
       formData.append("category", category);
       formData.append("position", position);
       formData.append("status", status);
-      formData.append("avatar", avatar);
+      if (avatar) {
+        formData.append("avatar", avatar);
+      }
       formData.append("priceAdult", priceAdult);
       formData.append("priceChildren", priceChildren);
       formData.append("priceBaby", priceBaby);
@@ -307,9 +322,8 @@ if (tourCreateForm) {
       formData.append("stockChildren", stockChildren);
       formData.append("stockBaby", stockBaby);
       formData.append("locations", JSON.stringify(locations));
-      formData.append("time", time);
-      formData.append("vehicle", vehicle);
       formData.append("departureDate", departureDate);
+      formData.append("endDate", endDate);
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
 
@@ -324,7 +338,7 @@ if (tourCreateForm) {
           }
 
           if (data.code == "success") {
-            drawNotify(data.code, data.message);
+            Notify(data.code, data.message);
             window.location.reload(); // Load lại trang
           }
         });
@@ -351,7 +365,7 @@ if (tourEditForm) {
       const category = event.target.category.value;
       const position = event.target.position.value;
       const status = event.target.status.value;
-      const avatar = filePond.avatar.getFile()?.file;
+      const avatar = filepond.avatar?.getFile()?.file || null;
       const priceAdult = event.target.priceAdult.value;
       const priceChildren = event.target.priceChildren.value;
       const priceBaby = event.target.priceBaby.value;
@@ -362,8 +376,6 @@ if (tourEditForm) {
       const stockChildren = event.target.stockChildren.value;
       const stockBaby = event.target.stockBaby.value;
       const locations = [];
-      const time = event.target.time.value;
-      const vehicle = event.target.vehicle.value;
       const departureDate = event.target.departureDate.value;
       const information = tinymce.get("information").getContent();
       const schedules = [];
@@ -398,7 +410,9 @@ if (tourEditForm) {
       formData.append("category", category);
       formData.append("position", position);
       formData.append("status", status);
-      formData.append("avatar", avatar);
+      if (avatar) {
+        formData.append("avatar", avatar);
+      }
       formData.append("priceAdult", priceAdult);
       formData.append("priceChildren", priceChildren);
       formData.append("priceBaby", priceBaby);
@@ -409,8 +423,6 @@ if (tourEditForm) {
       formData.append("stockChildren", stockChildren);
       formData.append("stockBaby", stockBaby);
       formData.append("locations", JSON.stringify(locations));
-      formData.append("time", time);
-      formData.append("vehicle", vehicle);
       formData.append("departureDate", departureDate);
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
@@ -729,7 +741,7 @@ if (listButtonUndo.length > 0) {
           }
 
           if (data.code == "success") {
-            drawNotify(data.code, data.message);
+            Notify(data.code, data.message);
             window.location.reload();
           }
         });
@@ -754,7 +766,7 @@ if (listButtonDestroy.length > 0) {
           }
 
           if (data.code == "success") {
-            drawNotify(data.code, data.message);
+            Notify(data.code, data.message);
             window.location.reload();
           }
         });
@@ -925,7 +937,7 @@ if (changeMulti) {
         }
 
         if (data.code == "success") {
-          drawNotify(data.code, data.message);
+          Notify(data.code, data.message);
           window.location.reload();
         }
       });
