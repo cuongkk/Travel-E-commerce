@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 const categoryController = require("../../controllers/admin/category.controller.js");
-const cloudinaryHelper = require("../../helpers/cloundinary.helper.js");
+const cloudinaryHelper = require("../../helpers/cloudinary.helper.js");
 const categoryValidate = require("../../validates/admin/category.validate.js");
 const multer = require("multer");
 

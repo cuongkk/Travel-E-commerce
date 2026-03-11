@@ -2,7 +2,7 @@ const router = require("express").Router();
 
 const tourController = require("../../controllers/admin/tour.controller.js");
 
-const cloudinaryHelper = require("../../helpers/cloundinary.helper.js");
+const cloudinaryHelper = require("../../helpers/cloudinary.helper.js");
 const tourValidate = require("../../validates/admin/tour.validate.js");
 
 const multer = require("multer");

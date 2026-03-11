@@ -7,18 +7,9 @@ block main
 		//- Section 5
 		.section-5
 			.inner-wrap
-				.inner-change-status
-					.inner-item
-						select
-							option(value="") -- Hành động --
-							option(value="") Hoạt động
-							option(value="") Dừng hoạt động
-							option(value="") Xóa
-					.inner-item
-						button Áp dụng
 				.inner-search
 					<i class="fa-solid fa-magnifying-glass"></i>
-					input(type="text" placeholder="Tìm kiếm")
+					input(type="text" placeholder="Tìm kiếm" search)
 				.inner-button-create
 					a(href=`/${pathAdmin}/setting/role/create`)  + Tạo mới
 		//- End Section 5
@@ -33,19 +24,31 @@ block main
 								+checkbox-30("", "")
 							th.text-left Tên nhóm quyền
 							th.text-left Mô tả ngắn
+							th.text-left Tạo bởi
+							th.text-left Cập nhật bởi
 							th.text-left Hành động
-					tbody 
-						tr 
-							td.text-left
-								+checkbox-30("", "")
-							td.text-left Quản trị viên
-							td.text-left Có đầy đủ các quyền
-							td.text-left
-								.box-actions 
-									a(href="#" class="inner-edit")
-										<i class="fa-solid fa-pen-to-square"></i>
-									a(href="#" class="inner-remove")
-										<i class="fa-solid fa-trash-can"></i>
+					tbody
+						each item in roleList
+							tr 
+								td.text-left
+									+checkbox-30("", "")
+								td.text-left #{item.name}
+								td.text-left #{item.description}
+								td.text-left
+									if (item.createdByFullName)
+										div #{item.createdByFullName}
+										div.inner-small #{item.createdAtFormat}
+								td.text-left
+									if (item.updatedByFullName)
+										div #{item.updatedByFullName}
+										div.inner-small #{item.updatedAtFormat}
+								td.text-left
+									.box-actions 
+										a(
+											href=`/${pathAdmin}/setting/role/edit/${item.id}`
+											class="inner-edit"
+										)
+											<i class="fa-solid fa-pen-to-square"></i>
 		//- End Section 6
 
 		//- Section 7

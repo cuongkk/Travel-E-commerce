@@ -1,0 +1,54 @@
+extends ../layouts/default.pug
+
+block main
+	main.main
+		h1.box-title Chỉnh sửa tài khoản quản trị
+
+		.section-8
+			form(id="setting-account-admin-edit-form")
+				.inner-group(style="display: none;")
+					label.inner-label(for="id") Id *
+					input(type="text" id="id" name="id" value=accountDetail.id)
+				.inner-group 
+					label.inner-label(for="fullName") Họ tên *
+					input(type="text" id="fullName" name="fullName" value=accountDetail.fullName)
+				.inner-group 
+					label.inner-label(for="email") Email *
+					input(type="email" id="email" name="email" value=accountDetail.email)
+				.inner-group 
+					label.inner-label(for="phone") Số điện thoại
+					input(type="text" id="phone" name="phone" value=accountDetail.phone)
+				.inner-group 
+					label.inner-label(for="role") Nhóm quyền
+					select(id="role" name="role")
+						each item in roleList
+							option(
+								value=item.id
+								selected=(item.id == accountDetail.role)
+								) #{item.name}
+				.inner-group 
+					label.inner-label(for="positionCompany") Chức vụ *
+					input(type="text" id="positionCompany" name="positionCompany" value=accountDetail.positionCompany)
+				.inner-group 
+					label.inner-label(for="status") Trạng thái
+					select(id="status" name="status")
+						option(
+							value="initial"
+							selected=(accountDetail.status == "initial")
+							) Khởi tạo
+						option(
+							value="active"
+							selected=(accountDetail.status == "active")
+							) Hoạt động
+						option(
+							value="inactive"
+							selected=(accountDetail.status == "inactive")
+							) Tạm dừng
+				.inner-group.inner-two-col
+					label.inner-label(for="avatar") Ảnh đại diện
+					div(class="inner-upload-image")
+						input(type="file" id="avatar" name="avatar" filepond-image image-default=accountDetail.avatar)
+				.inner-button.inner-two-col
+					button Cập nhật
+			.inner-back 
+				a(href=`/${pathAdmin}/setting/account-admin/list`) Quay lại danh sách

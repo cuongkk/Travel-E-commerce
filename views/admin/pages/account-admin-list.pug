@@ -41,7 +41,7 @@ block main
 							button Áp dụng
 					.inner-search
 						<i class="fa-solid fa-magnifying-glass"></i>
-						input(type="text" placeholder="Tìm kiếm")
+						input(type="text" placeholder="Tìm kiếm" search)
 					.inner-button-create
 						a(href=`/${pathAdmin}/setting/account-admin/create`)  + Tạo mới
 			//- End Section 5
@@ -62,29 +62,42 @@ block main
 							th.text-left Chức vụ
 							th.text-center Trạng thái
 							th.text-left Hành động
-					tbody 
-						tr 
-							td.text-left
-								+checkbox-30("", "")
-							td.text-left Lê Văn A
-							td.text-center
-								img.inner-image
-							td.text-left 
-								div levana@gmail.com
-							td.text-left 
-								div 01234567890
-							td.text-left 
-								div Quản trị viên
-							td.text-left 
-								div Giám đốc
-							td.text-center
-								.status.status-green Hoạt động 
-							td.text-left
-								.box-actions 
-									a(href="#" class="inner-edit")
-										<i class="fa-solid fa-pen-to-square"></i>
-									a(href="#" class="inner-remove")
-										<i class="fa-solid fa-trash-can"></i>
+					tbody
+						each item in accountAdminList
+							tr 
+								td.text-left
+									+checkbox-30("", "")
+								td.text-left #{item.fullName}
+								td.text-centers
+									img(src=item.avatar class="inner-avatar")
+								td.text-left 
+									div #{item.email}
+								td.text-left 
+									div #{item.phone}
+								td.text-left
+									div #{item.roleName}
+								td.text-left 
+									div #{item.positionCompany}
+								td.text-center
+									if (item.status == "initial")
+										.status.status-orange Khởi tạo
+									else if (item.status == "active")
+										.status.status-green Hoạt động
+									else if (item.status == "inactive")
+										.status.status-red Tạm dừng 
+								td.text-left
+									.box-actions 
+										a(
+											href=`/${pathAdmin}/setting/account-admin/edit/${item.id}`
+											class="inner-edit"
+										)
+											<i class="fa-solid fa-pen-to-square"></i>
+										button(
+											class="inner-remove"
+											button-delete
+											data-api=`/${pathAdmin}/setting/account-admin/delete/${item.id}`
+											)
+											<i class="fa-solid fa-trash-can"></i>
 			.pagination
 				span(class="inner-label") Hiển thị 1 - 9 của 78
 				select(class="inner-pagination")

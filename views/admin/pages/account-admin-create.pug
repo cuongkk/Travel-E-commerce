@@ -18,9 +18,8 @@ block main
 					label.inner-label(for="role") Nhóm quyền
 					select(name="role" id="role")
 						option(value="") Chọn nhóm quyền
-						option(value="admin") Quản trị viên
-						option(value="editor") Biên tập viên
-						option(value="viewer") Người xem
+						each item in roleList
+							option(value=item.id) #{item.name}
 				.inner-group 
 					label.inner-label(for="position") Chức vụ *
 					input(type="text" id="position" name="position" placeholder="Nhập chức vụ")
@@ -28,6 +27,7 @@ block main
 					label.inner-label(for="status") Trạng thái
 					select(name="status" id="status")
 						option(value="") Chọn trạng thái
+						option(value="initial") Khởi tạo
 						option(value="active") Hoạt động
 						option(value="inactive") Tạm dừng
 				.inner-group 

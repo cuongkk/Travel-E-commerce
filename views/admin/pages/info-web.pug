@@ -8,24 +8,37 @@ block main
 			form(action="" id="info-web-form")
 				.inner-group 
 					label.inner-label(for="name") Tên website *
-					input(type="text" id="name" name="name" placeholder="Nhập tên website")
+					input(type="text" id="name" name="name" placeholder="Nhập tên website" value=settingWebsiteInfo.websiteName)
 				.inner-group 
 					label.inner-label(for="phone") Số điện thoại
-					input(type="text" id="phone" name="phone" placeholder="Nhập số điện thoại")
+					input(type="text" id="phone" name="phone" placeholder="Nhập số điện thoại" value=settingWebsiteInfo.phone)
 				.inner-group 
 					label.inner-label(for="email") Email 
-					input(type="text" id="email" name="email" placeholder="Nhập email")
+					input(type="text" id="email" name="email" placeholder="Nhập email" value=settingWebsiteInfo.email)
 				.inner-group 
 					label.inner-label(for="address") Địa chỉ 
-					input(type="text" id="address" name="address" placeholder="Nhập địa chỉ")
+					input(type="text" id="address" name="address" placeholder="Nhập địa chỉ" value=settingWebsiteInfo.address)
 				.inner-group
 					label.inner-label(for="logo") Logo
 					.inner-upload-image
-						input(type="file" id="logo" name="logo" filepond-image)
+						input(
+            type="file" 
+            id="logo" 
+            name="logo" 
+            filepond-image 
+            image-default=settingWebsiteInfo.logo
+            )
 				.inner-group
 					label.inner-label(for="favicon") Favicon
 					.inner-upload-image
-						input(type="file" id="favicon" name="favicon" filepond-image)
+						input(
+            type="file" 
+            id="favicon" 
+            name="favicon" 
+            filepond-image
+            image-default=settingWebsiteInfo.favicon
+            )
+
 				.inner-button.inner-two-col
 					button Cập nhật
 			.inner-back 

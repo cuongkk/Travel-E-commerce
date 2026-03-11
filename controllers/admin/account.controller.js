@@ -4,6 +4,7 @@ const generateHelper = require("../../helpers/generate.helper.js");
 const mailHelper = require("../../helpers/mail.helper.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const slugify = require("slugify");
 
 module.exports.login = (req, res) => {
   res.render("admin/pages/login", {
@@ -72,8 +73,12 @@ module.exports.registerPost = async (req, res) => {
 
   req.body.status = "initial";
 
-  // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
+  // Tạo slug từ fullName để tránh trùng lặp null và hỗ trợ tìm kiếm
+  if (req.body.fullName) {
+    req.body.slug = slugify(req.body.fullName, { lower: true, strict: true });
+  }
 
+  // Mã hóa mật khẩu trước khi lưu vào cơ sở dữ liệu
   req.body.password = await bcrypt.hash(req.body.password, 10);
 
   const newAccount = new accountAdmin(req.body);

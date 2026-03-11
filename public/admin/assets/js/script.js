@@ -507,12 +507,42 @@ if (infoWebForm) {
       },
     ])
     .onSuccess((event) => {
-      const name = event.target.name.value;
-      const phone = event.target.phone.value;
-      const email = event.target.email.value;
-      const address = event.target.address.value;
-      const logo = filepond.logo.getFile()?.file;
-      const favicon = filepond.favicon.getFile()?.file;
+      const form = event.target;
+
+      const name = form.name.value;
+      const phone = form.phone.value;
+      const email = form.email.value;
+      const address = form.address.value;
+      const logo = filepond.logo?.getFile()?.file || null;
+      const favicon = filepond.favicon?.getFile()?.file || null;
+
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("phone", phone);
+      formData.append("email", email);
+      formData.append("address", address);
+      if (logo) {
+        formData.append("logo", logo);
+      }
+      if (favicon) {
+        formData.append("favicon", favicon);
+      }
+
+      fetch(`/${pathAdmin}/setting/website-info`, {
+        method: "PATCH",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code === "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code === "success") {
+            notify.success(data.message);
+            window.location.reload();
+          }
+        });
     });
 }
 // End Info Web Form
@@ -557,17 +587,122 @@ if (accountAdminCreateForm) {
       },
     ])
     .onSuccess((event) => {
-      const name = event.target.name.value;
+      const fullName = event.target.name.value;
       const email = event.target.email.value;
       const phone = event.target.phone.value;
       const role = event.target.role.value;
-      const position = event.target.position.value;
+      const positionCompany = event.target.position.value;
       const status = event.target.status.value;
       const password = event.target.password.value;
-      const avatar = filepond.avatar.getFile()?.file;
+      const avatar = filepond.avatar?.getFile()?.file || null;
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("role", role);
+      formData.append("positionCompany", positionCompany);
+      formData.append("status", status);
+      formData.append("password", password);
+      if (avatar) {
+        formData.append("avatar", avatar);
+      }
+
+      fetch(`/${pathAdmin}/setting/account-admin/create`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+            window.location.reload(); // Load lại trang
+          }
+        });
     });
 }
 // End Account Admin Create Form
+
+// Setting Account Admin Edit Form
+const settingAccountAdminEditForm = document.querySelector("#setting-account-admin-edit-form");
+if (settingAccountAdminEditForm) {
+  const validator = new JustValidate("#setting-account-admin-edit-form");
+
+  validator
+    .addField("#fullName", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập họ tên!",
+      },
+      {
+        rule: "minLength",
+        value: 5,
+        errorMessage: "Vui lòng nhập ít nhất 5 ký tự!",
+      },
+      {
+        rule: "maxLength",
+        value: 50,
+        errorMessage: "Vui lòng nhập tối đa 50 ký tự!",
+      },
+    ])
+    .addField("#email", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập email!",
+      },
+      {
+        rule: "email",
+        errorMessage: "Email không đúng định dạng!",
+      },
+    ])
+    .addField("#positionCompany", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập chức vụ!",
+      },
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const fullName = event.target.fullName.value;
+      const email = event.target.email.value;
+      const phone = event.target.phone.value;
+      const role = event.target.role.value;
+      const positionCompany = event.target.positionCompany.value;
+      const status = event.target.status.value;
+      const avatar = filePond.avatar.getFile()?.file;
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("role", role);
+      formData.append("positionCompany", positionCompany);
+      formData.append("status", status);
+      formData.append("avatar", avatar);
+
+      fetch(`/${pathAdmin}/setting/account-admin/edit/${id}`, {
+        method: "PATCH",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+          }
+        });
+    });
+}
+// End Setting Account Admin Edit Form
 
 // Role Create Form
 const roleCreateForm = document.querySelector("#role-create-form");
@@ -585,14 +720,90 @@ if (roleCreateForm) {
       const description = event.target.description.value;
       const permissions = [];
 
-      const listPermissions = document.querySelectorAll('[name="permissions"]:checked');
-      listPermissions.forEach((item) => {
-        permissions.push(item.value);
+      const listPermissionChecked = document.querySelectorAll('input[name="permissions"]:checked');
+      listPermissionChecked.forEach((input) => {
+        permissions.push(input.value);
       });
-      console.log(permissions);
+
+      const dataFinal = {
+        name: name,
+        description: description,
+        permissions: permissions,
+      };
+
+      fetch(`/${pathAdmin}/setting/role/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+            window.location.reload();
+          }
+        });
     });
 }
 // End Role Create Form
+
+// Setting Role Edit Form
+const settingRoleEditForm = document.querySelector("#setting-role-edit-form");
+if (settingRoleEditForm) {
+  const validator = new JustValidate("#setting-role-edit-form");
+
+  validator
+    .addField("#name", [
+      {
+        rule: "required",
+        errorMessage: "Vui lòng nhập tên nhóm quyền!",
+      },
+    ])
+    .onSuccess((event) => {
+      const id = event.target.id.value;
+      const name = event.target.name.value;
+      const description = event.target.description.value;
+      const permissions = [];
+
+      // permissions
+      const listPermissionChecked = document.querySelectorAll(`[name="permissions"]:checked`);
+      listPermissionChecked.forEach((input) => {
+        permissions.push(input.value);
+      });
+      // End permissions
+
+      const dataFinal = {
+        name: name,
+        description: description,
+        permissions: permissions,
+      };
+
+      fetch(`/${pathAdmin}/setting/role/edit/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+          }
+        });
+    });
+}
+// End Setting Role Edit Form
 
 // Profile Edit Form
 const profileEditForm = document.querySelector("#profile-edit-form");
@@ -636,6 +847,30 @@ if (profileEditForm) {
       const email = event.target.email.value;
       const phone = event.target.phone.value;
       const avatar = filepond.avatar.getFile()?.file;
+      const favicon = filepond.favicon.getFile()?.file;
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("fullName", fullName);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      formData.append("avatar", avatar);
+
+      fetch(`/${pathAdmin}/profile/edit`, {
+        method: "PATCH",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            drawNotify(data.code, data.message);
+            window.location.reload();
+          }
+        });
     });
 }
 
@@ -681,6 +916,26 @@ if (changePasswordForm) {
     ])
     .onSuccess((event) => {
       const password = event.target.password.value;
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("password", password);
+
+      fetch(`/${pathAdmin}/profile/change-password`, {
+        method: "PATCH",
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            drawNotify(data.code, data.message);
+            window.location.reload();
+          }
+        });
     });
 }
 

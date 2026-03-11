@@ -45,6 +45,7 @@ module.exports.list = async (req, res) => {
     })
     .limit(pagination.limitItems)
     .skip(pagination.skip);
+
   const accountAdminList = await AccountAdmin.find({}).select("id fullName");
 
   for (const item of categoryList) {

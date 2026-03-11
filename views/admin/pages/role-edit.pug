@@ -1,0 +1,44 @@
+extends ../layouts/default.pug
+include ../mixins/checkbox-30.pug
+
+block main
+	main.main
+		h1.box-title Chỉnh sửa nhóm quyền
+
+		.section-8
+			form(id="setting-role-edit-form")
+				.inner-group(style="display: none;")
+					label.inner-label(for="id") Id *
+					input(type="text" id="id" name="id" value=roleDetail.id)
+				.inner-group 
+					label.inner-label(for="name") Tên nhóm quyền *
+					input(
+						type="text" 
+						id="name" 
+						name="name" 
+						value=roleDetail.name
+						)
+				.inner-group 
+					label.inner-label(for="description") Mô tả ngắn
+					input(
+						type="text" 
+						id="description" 
+						name="description" 
+						value=roleDetail.description
+						)
+				.inner-group 
+					label.inner-label Phân quyền
+					.inner-checkbox 
+						each item, index in permissionList
+							.inner-checkbox-item 
+								+checkbox-30(
+									"permissions", 
+									`permissions-${index}`, 
+									item.value,
+									roleDetail.permissions.includes(item.value)
+									)
+								label(for=`permissions-${index}`) #{item.label}
+				.inner-button.inner-two-col
+					button Cập nhật
+			.inner-back 
+				a(href=`/${pathAdmin}/setting/role/list`) Quay lại danh sách
