@@ -3,7 +3,7 @@ include ../mixins/product-item.pug
 include ../mixins/breadcrumb.pug
 
 block main
-	+breadcrumb()
+	+breadcrumb(categoryDetail)
 	.section-9
 		.container
 			.inner-wrap
@@ -15,21 +15,19 @@ block main
 								i.fa-solid.fa-filter
 							.inner-group
 								.inner-label Điểm đi
-								select
+								select(name="locationFrom")
 									option(value="") --Chọn điểm đi--
-									option(value="") Hà Nội
-									option(value="") Hồ Chí Minh
-									option(value="") Đà Nẵng
+									each item in cityList
+                    option(value=item.id) #{item.name}
 							.inner-group
 								.inner-label Điểm đến
-								select
+								select(name="locationTo")
 									option(value="") --Chọn điểm đến--
-									option(value="") Hà Nội
-									option(value="") Hồ Chí Minh
-									option(value="") Đà Nẵng
+									each item in cityList
+                    option(value=item.id) #{item.name}
 							.inner-group
 								.inner-label Ngày khởi hành
-								input.inner-input(type="date")
+								input.inner-input(type="date" name="departureDate")
 							.inner-group
 								.inner-label Số lượng Hành Khách
 								.inner-input-list
@@ -38,33 +36,37 @@ block main
 										input(
 											value="0" 
 											type="number"
+											name="stockAdult"
 											)
 									.inner-input-item
 										.inner-label Trẻ em
 										input(
 											value="0" 
 											type="number"
+											name="stockChildren"
 											)
 									.inner-input-item
 										.inner-label Em bé
 										input(
 											value="0" 
 											type="number"
+											name="stockInfant"
 											)
 							.inner-group
 								.inner-label Mức giá
-								select
+								select(name="price")
 									option(value="") --Chọn mức giá--
-									option(value="") Dưới 5 triệu
-									option(value="") Từ 5 triệu đến 10 triệu
-									option(value="") Trên 10 triệu
+									option(value="0-999999") Dưới 1tr
+                  option(value="1000000-3000000") Từ 1tr đến 3tr
+                  option(value="3000000-6000000") Từ 3tr đến 6tr
+                  option(value="6000000-10000000") Từ 6tr đến 10tr
+                  option(value="10000000-1000000000") Trên 10tr
 							button.inner-button Áp Dụng
 				.inner-right
 					.inner-info
-						.inner-title Tour Nước Ngoài
+						.inner-title #{categoryDetail.name}
 						.inner-desc
-							| Du lịch Châu Á: là châu lục lớn và đông dân nhất thế giới. Châu Á cũng có nhiều danh lam thắng cảnh đẹp tại một số quốc gia như Hàn Quốc, Nhật Bản, Trung Quốc, Việt Nam,... và VK
-							|   Travel là nhà tổ chức du lịch chuyên nghiệp hàng đầu Châu Á, đã 5 lần liên tiếp nhận giải TTG Travel Awards. Hãy cùng 28.Travel du lịch Châu Á để tận hưởng những dịch vụ tốt nhất.
+							| !{categoryDetail.description}
 						.inner-filter
 							.inner-group.inner-group-1
 								.inner-label
@@ -102,13 +104,11 @@ block main
 									.inner-title Bộ Lọc
 									i.fa-solid.fa-filter
 					.inner-list-item
-						+product-item()
-						+product-item()
-						+product-item()
-						+product-item()
-						+product-item()
-						+product-item()
-						+product-item()
+						if (tourList.length > 0)
+              each item in tourList
+                +product-item(item)
+            else
+              p Không có dữ liệu.
 					.inner-pagination
 						ul.inner-list
 							li.inner-item

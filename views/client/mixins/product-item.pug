@@ -1,41 +1,45 @@
-mixin product-item()
-	.product-item
-		img.inner-image(
-			alt="Tour 1" 
-			src="/client/assets/image/tour-1.jpg"
-			)
-		.inner-discount
-			img(
-				alt="Thunder Icon" 
-				src="/client/assets/image/Icon-thunder.png"
-				)
-			| GIẢM -30%
-		.inner-content
-			.inner-name Hà Nội - Lào Cai - Sapa 4N3Đ
-			.inner-price
-				span.inner-old-price
-					| 13.650.000
-					span đ
-				span.inner-new-price
-					| 2.590.000
-					span đ
-			.inner-intro
-				.inner-id
-					| Mã Tour:
-					span 123456789
-				.inner-date
-					| Ngày Khởi Hành:
-					span 22/07/2024
-				.inner-time
-					| Thời Gian:
-					span 10 Ngày 9 Đêm
-			.inner-rating
-				.inner-star
-					img(
-						alt="Rating Icon" 
-						src="/client/assets/image/Icon-rating.png"
-						)
-					span (5)
-				span.inner-quantity
-					div Số chỗ còn:
-					span 10
+mixin product-item(item)
+  - const discount = Math.floor(((item.priceAdult - item.priceNewAdult)/item.priceAdult)*100);
+  .product-item
+    .inner-image
+      a(href=`/tour/detail/${item.slug}`)
+        img(
+          alt=item.name
+          src=item.avatar
+          )
+    .inner-discount
+      i.fa-solid.fa-bolt
+      | Giảm -#{discount}%
+    .inner-content
+      h3.inner-title
+        a(href=`/tour/detail/${item.slug}`) #{item.name}
+      .inner-prices
+        .inner-price-old
+          | #{item.priceAdult.toLocaleString("vi-VN")}
+          span.inner-unit đ
+        .inner-price-new
+          | #{item.priceNewAdult.toLocaleString("vi-VN")}
+          span.inner-unit đ
+      .inner-desc
+        //- div
+        //-   | Mã Tour:
+        //-   b 123456789
+        div
+          | Ngày Khởi Hành: 
+          b #{item.departureDateFormat}
+        div
+          | Thời Gian:
+          b #{item.time}
+      .inner-meta
+        .inner-rating
+          .inner-stars
+            i.fa-solid.fa-star
+            i.fa-solid.fa-star
+            i.fa-solid.fa-star
+            i.fa-solid.fa-star
+            i.fa-regular.fa-star
+          .inner-number (5)
+          .inner-number (5)
+        .inner-stock
+          .inner-label Số chỗ còn:
+          .inner-number #{item.stockAdult}

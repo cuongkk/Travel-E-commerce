@@ -6,47 +6,30 @@
           alt="Menu Icon" 
           src="/client/assets/image/Icon-menu.png"
           )
-      a.inner-logo(href="#")
+      a.inner-logo(href="/")
         img(
-          alt="Logo 28Travel" 
-          src="/client/assets/image/logo.png"
+          alt=settingWebsiteInfo.websiteName
+          src=settingWebsiteInfo.logo
           )
       nav.inner-menu
         ul
           li
-            a.active(href="#") Trang chủ
-          li
-            a(href="#")
-              | Tour Trong Nước
-              i.fa-solid.fa-caret-down
-            ul.inner-submenu
-              li
-                a.active(href="#") Tour Miền Bắc
-              li
-                a(href="#") Tour Miền Trung
-              li
-                a(href="#") Tour Miền Nam
-              li
-                a(href="#") Tour Xuyên Việt
-          li
-            a(href="#")
-              | Tour Nước Ngoài
-              i.fa-solid.fa-caret-down
-            ul.inner-submenu
-              li
-                a(href="#") Tour Châu Á
-              li
-                a(href="#") Tour Châu Âu
-              li
-                a(href="#") Tour Châu Mỹ
-              li
-                a(href="#") Tour Châu Úc
+            a.active(href="/") Trang Chủ
+          each item in categoryList
+						li
+							a(href=`/category/${item.slug}`) #{item.name}
+							if (item.children && item.children.length > 0)
+								i.fa-solid.fa-caret-down
+							ul.inner-submenu
+								each itemChild in item.children
+									li
+										a(href=`/category/${itemChild.slug}`) #{itemChild.name}
           li
             a(href="#") Tin Tức
           li
             a(href="#") Liên Hệ
         .inner-overlay
-      a.inner-cart(href="#")
+      a.inner-cart(href="/cart")
         img(
           alt="Giỏ hàng" 
           src="/client/assets/image/cart.png"
@@ -56,4 +39,4 @@
             alt="Giỏ hàng" 
             src="/client/assets/image/left.png"
             )
-          | 1
+          div(mini-cart) 0

@@ -1,13 +1,15 @@
 nav.sider
 	ul.inner-menu
-		li
-			a(href=`/${pathAdmin}/dashboard`)
-				<i class="fa-solid fa-gauge-high"></i>
-				label.inner-label Tổng quan 
-		li
-			a(href=`/${pathAdmin}/category/list`)
-				<i class="fa-solid fa-table-cells-large"></i>
-				label.inner-label Quản lý danh mục
+		if (pers.includes("dashboard-view"))
+			li
+				a(href=`/${pathAdmin}/dashboard`)
+					<i class="fa-solid fa-gauge-high"></i>
+					label.inner-label Tổng quan
+		if (pers.includes("category-view"))
+			li
+				a(href=`/${pathAdmin}/category/list`)
+					<i class="fa-solid fa-table-cells-large"></i>
+					label.inner-label Quản lý danh mục
 		li
 			a(href=`/${pathAdmin}/tour/list`)
 				<i class="fa-solid fa-table-list"></i>

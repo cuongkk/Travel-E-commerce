@@ -1,16 +1,19 @@
-mixin breadcrumb()
-	.breadcrumb
-			.inner-image
-				img.image(
-					alt="Breadcrump-1 Image" 
-					src="/client/assets/image/image-breadcrumb-1.jpg"
-					)
-			.inner-content
-				.container
-					.inner-wrap
-						h3.inner-title Tour Nước Ngoài
-						nav.inner-list
-							a(href="#") Trang Chủ
-							i.fa-solid.fa-angles-right
-							a(href="#") Tour Nước Ngoài
-	
+mixin breadcrumb(categoryDetail, tour)
+  - const tourDetail = tour ? tour : categoryDetail;
+  .breadcrumb
+    .inner-image
+      img(
+        src=tourDetail.avatar
+        alt=tourDetail.name
+        )
+    .inner-content
+      .container
+        .inner-wrap
+          h1.inner-title #{tourDetail.name}
+          nav.inner-links
+            a(href="/") Trang Chủ
+            i.fa-solid.fa-angles-right
+            a(href=`/category/${categoryDetail.slug}`) #{categoryDetail.name}
+            if (tour)
+              i.fa-solid.fa-angles-right
+              a(href=`/category/${tourDetail.slug}`) #{tourDetail.name}

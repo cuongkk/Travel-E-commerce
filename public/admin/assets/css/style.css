@@ -1172,6 +1172,22 @@ h1.box-title {
 .section-8 .inner-upload-image .filepond--drop-label label {
   font-size: 40px;
 }
+
+.section-8 form .inner-upload-image-multi .filepond--root {
+  width: 300px;
+  max-height: 600px;
+}
+
+.section-8 form .inner-upload-image-multi .filepond--drop-label label {
+  font-weight: 500;
+  font-size: 50px;
+  cursor: pointer;
+}
+
+.section-8 form .inner-upload-image-multi .filepond--credits {
+  display: none;
+}
+
 @media (max-width: 767.98px) {
   .section-8 {
     padding: 20px;

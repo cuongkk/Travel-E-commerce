@@ -43,6 +43,18 @@ block main
 							filepond-image 
 							image-default=tourDetail.avatar
 							)
+				.inner-group.inner-two-col
+					label.inner-label(for="images") Danh sách ảnh
+					div(class="inner-upload-image-multi")
+						input(
+							type="file" 
+							multiple
+							id="images" 
+							name="images" 
+							filepond-image-multi
+							data-allow-reorder="true"
+							list-image-default=tourDetail.images
+							)
 				.inner-group 
 					label.inner-label Giá cũ
 					.inner-input-list 
@@ -92,7 +104,7 @@ block main
 									)
 								label(for=`locations-${item.id}`) #{item.name}
 				.inner-group 
-					label.inner-label(for="time") Thời gian
+					label.inner-label(fors="time") Thời gian
 					input(type="text" id="time" name="time" value=tourDetail.time)
 				.inner-group 
 					label.inner-label(for="departureDate") Ngày khởi hành

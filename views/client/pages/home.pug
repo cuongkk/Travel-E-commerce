@@ -8,7 +8,7 @@ block main
         h1.title Du lịch Châu Á - Khám phá Mỹ, Úc, Âu Đi nơi đâu bạn muốn
         p.inner-desc
           | Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua
-        form.inner-form(action="#")
+        form.inner-form(action="#" form-search)
           .inner-location.inner-box
             .inner-input-group
               img.inner-icon(
@@ -18,6 +18,7 @@ block main
               input.inner-input(
                 placeholder="Bạn muốn đi đâu?" 
                 type="text"
+								name="locationTo"
                 )
               i.fa-solid.fa-chevron-down.inner-down
               .inner-suggest
@@ -68,19 +69,19 @@ block main
                   .inner-label Người lớn
                   .inner-count
                     span.inner-down -
-                    span.inner-number 1
+                    span.inner-number {stock-adult}
                     span.inner-up +
                 .inner-item
                   .inner-label Trẻ em
                   .inner-count
                     span.inner-down -
-                    span.inner-number 0
+                    span.inner-number {stock-children}
                     span.inner-up +
                 .inner-item
                   .inner-label Em bé
                   .inner-count
                     span.inner-down -
-                    span.inner-number 0
+                    span.inner-number {stock-baby}
                     span.inner-up +
           .inner-date.inner-box
             .inner-input-group
@@ -90,7 +91,8 @@ block main
                 )
               input.inner-input(
                 placeholder="Lịch khởi hành" 
-                type="text"
+                type="date"
+                name="departureDate"
                 )
               i.fa-solid.fa-chevron-down.inner-down
           .inner-search.inner-box.box-purple
@@ -128,14 +130,9 @@ block main
         .inner-tour
           .swiper.swiperSection2
             .swiper-wrapper
-              .swiper-slide
-                +product-item()
-              .swiper-slide
-                +product-item()
-              .swiper-slide
-                +product-item()
-              .swiper-slide
-                +product-item()
+							each item in tourListSection2
+								.swiper-slide
+									+product-item(item)
   .section-3
     .container
       .inner-wrap
@@ -178,14 +175,8 @@ block main
       .inner-wrap
         .title Tour Trong Nước
         .inner-tour
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
+          each item in tourListSection4
+          +product-item(item)
         .inner-button
           a(href="#")
             span Xem tất cả
@@ -201,14 +192,8 @@ block main
       .inner-wrap
         .title Tour Nước Ngoài
         .inner-tour
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
-          +product-item()
+          each item in tourListSection4
+          +product-item(item)
         .inner-button
           a(href="#")
             span Xem tất cả

@@ -2,34 +2,35 @@ extends ../layouts/default.pug
 include ../mixins/options.pug
 block main
 	main.main
-		h1.box-title Tạo danh mục
-		.section-8
-			form(action="" id="category-create-form")
-				.inner-group 
-					label.inner-label(for="name") Tên danh mục *
-					input(type="text" id="name" name="name" placeholder="Nhập tên danh mục")
-				.inner-group 
-					label.inner-label(for="parent") Danh mục cha
-					select(id="parent" name="parent")
-						option(value="") -- Chọn danh mục --
-						+options(categoryList)
-				.inner-group 
-					label.inner-label(for="position") Vị trí
-					input(type="text" id="position" name="position" placeholder="Nhập vị trí hiển thị")
-				.inner-group 
-					label.inner-label(for="status") Trạng thái
-					select(id="status" name="status")
-						option(value="active") Hoạt động
-						option(value="inactive") Tạm dừng
-				.inner-group.inner-two-col
-					label.inner-label(for="avatar") Ảnh đại diện
-					.inner-upload-image
-						input(type="file" id="avatar" name="avatar" filepond-image)
-				.inner-group.inner-two-col
-					label.inner-label(for="description") Mô tả
-					textarea(id="description" name="description" textarea-mce)
-				.inner-button.inner-two-col
-					button Tạo mới
-			.inner-back 
-				a(href=`/${pathAdmin}/category/list`) Quay lại danh sách
-		
+	  if (pers.includes("category-create"))
+			h1.box-title Tạo danh mục
+			.section-8
+				form(action="" id="category-create-form")
+					.inner-group 
+						label.inner-label(for="name") Tên danh mục *
+						input(type="text" id="name" name="name" placeholder="Nhập tên danh mục")
+					.inner-group 
+						label.inner-label(for="parent") Danh mục cha
+						select(id="parent" name="parent")
+							option(value="") -- Chọn danh mục --
+							+options(categoryList)
+					.inner-group 
+						label.inner-label(for="position") Vị trí
+						input(type="text" id="position" name="position" placeholder="Nhập vị trí hiển thị")
+					.inner-group 
+						label.inner-label(for="status") Trạng thái
+						select(id="status" name="status")
+							option(value="active") Hoạt động
+							option(value="inactive") Tạm dừng
+					.inner-group.inner-two-col
+						label.inner-label(for="avatar") Ảnh đại diện
+						.inner-upload-image
+							input(type="file" id="avatar" name="avatar" filepond-image)
+					.inner-group.inner-two-col
+						label.inner-label(for="description") Mô tả
+						textarea(id="description" name="description" textarea-mce)
+					.inner-button.inner-two-col
+						button Tạo mới
+				.inner-back 
+					a(href=`/${pathAdmin}/category/list`) Quay lại danh sách
+			

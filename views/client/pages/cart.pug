@@ -1,142 +1,15 @@
 extends ../layouts/default.pug
 
 block main
-	.section-11
+	.section-11(page-cart)
 		.container
 			.inner-wrap
 				.inner-cart
 					.inner-head
 						.inner-title Giỏ hàng
-						a.inner-button Quay lại mua hàng >
+						a(href="/").inner-button Quay lại mua hàng 
+							i.fa-solid.fa-angle-right
 					.inner-list
-						.inner-tour-item
-							button.inner-delete
-								img(
-									alt="" 
-									src="/client/assets/image/icon-delete.png"
-									)
-							button.inner-check
-								img(
-									alt="" 
-									src="/client/assets/image/icon-check.png"
-									)
-							.inner-content
-								.inner-image
-									img(
-										alt="section-11 image" 
-										src="/client/assets/image/section-11.jpg"
-										)
-								.inner-info
-									.inner-name Tour Châu Âu Đón Noel | 11N10D | Pháp – Thụy Sĩ – Ý
-									.inner-list-item
-										.inner-item
-											.inner-label Mã Tour
-											.inner-value 123456789
-										.inner-item
-											.inner-label Ngày Khởi Hành
-											.inner-value 20/10/2024
-										.inner-item
-											.inner-label Khởi Hành Tại
-											.inner-value Hà Nội
-							.inner-quantity
-								.inner-label Số Lượng Hành Khách
-								.inner-item
-									.inner-label Người lớn:
-									input(
-										min="0" 
-										value="1" 
-										type="number"
-										)
-									.inner-price
-										span 1
-										span x
-										span 10.000.000
-								.inner-item
-									.inner-label Trẻ em:
-									input(
-										min="0" 
-										value="0" 
-										type="number"
-										)
-									.inner-price
-										span 0
-										span x
-										span 7.990.000
-								.inner-item
-									.inner-label Em bé:
-									input(
-										min="0" 
-										value="0" 
-										type="number"
-										)
-									.inner-price
-										span 0
-										span x
-										span 7.990.000
-						.inner-tour-item
-							button.inner-delete
-								img(
-									alt="" 
-									src="/client/assets/image/icon-delete.png"
-									)
-							button.inner-check
-								img(
-									alt="" 
-									src="/client/assets/image/icon-check.png"
-									)
-							.inner-content
-								.inner-image
-									img(
-										alt="section-11 image" 
-										src="/client/assets/image/section-11.jpg"
-										)
-								.inner-info
-									.inner-name Tour Châu Âu Đón Noel | 11N10D | Pháp – Thụy Sĩ – Ý
-									.inner-list-item
-										.inner-item
-											.inner-label Mã Tour
-											.inner-value 123456789
-										.inner-item
-											.inner-label Ngày Khởi Hành
-											.inner-value 20/10/2024
-										.inner-item
-											.inner-label Khởi Hành Tại
-											.inner-value Hà Nội
-							.inner-quantity
-								.inner-label Số Lượng Hành Khách
-								.inner-item
-									.inner-label Người lớn:
-									input(
-										min="0" 
-										value="1" 
-										type="number"
-										)
-									.inner-price
-										span 1
-										span x
-										span 10.000.000
-								.inner-item
-									.inner-label Trẻ em:
-									input(
-										min="0" 
-										value="0" 
-										type="number"
-										)
-									.inner-price
-										span 0
-										span x
-										span 7.990.000
-								.inner-item
-									.inner-label Em bé:
-									input(
-										min="0" 
-										value="0" 
-										type="number"
-										)
-									.inner-price
-										span 0
-										span x
-										span 7.990.000
 					.inner-bill
 						form(id="code-form").inner-code
 							input(
@@ -147,14 +20,18 @@ block main
 								)
 							button.inner-button Dùng Mã
 						.inner-box.inner-price
-							.inner-label Tổng tiền
-							.inner-value 15.070.000
+							.inner-label Tạm tính:
+							.inner-price
+								span(cart-sub-total) 0
+								span đ
 						.inner-box.inner-discount
-							.inner-label Giảm
-							.inner-value -5.070.000
+							.inner-price
+								span(cart-discount) 0
+								span đ
 						.inner-box.inner-total-price
-							.inner-label Thanh Toán
-							.inner-value 17.070.000
+							.inner-price-highlight
+								span(cart-total) 0
+								span đ
 				form(id="payment-form").inner-payment
 					.inner-info
 						.inner-title Thông Tin Khách Hàng

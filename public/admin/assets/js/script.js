@@ -2,7 +2,8 @@ const initTinyMCE = (selector) => {
   tinymce.init({
     selector: selector,
     plugins: ["anchor", "link"],
-    toolbar: "undo redo | styles | bold italic | alignleft aligncenter alignright alignjustify | outdent indent link anchor",
+    toolbar: "undo redo | styles | bold italic | alignleft aligncenter alignright alignjustify | outdent indent | link anchor charmap image numlist bullist media",
+    images_upload_url: `/${pathAdmin}/upload/image`,
   });
 };
 
@@ -110,37 +111,117 @@ if (listFilepondImage.length > 0) {
 }
 //End Filepond Image
 
+// Filepond Image Multi
+const listFilepondImageMulti = document.querySelectorAll("[filepond-image-multi]");
+const filePondMulti = {};
+if (listFilepondImageMulti.length > 0) {
+  FilePond.registerPlugin(FilePondPluginImagePreview);
+  FilePond.registerPlugin(FilePondPluginFileValidateType);
+
+  listFilepondImageMulti.forEach((filepondImage) => {
+    let listImageDefault = filepondImage.getAttribute("list-image-default");
+    let files = null;
+    if (listImageDefault) {
+      listImageDefault = JSON.parse(listImageDefault);
+      if (listImageDefault.length > 0) {
+        files = [];
+        listImageDefault.forEach((image) => {
+          files.push({
+            source: image,
+          });
+        });
+      }
+    }
+
+    filePondMulti[filepondImage.name] = FilePond.create(filepondImage, {
+      labelIdle: "+",
+      acceptedFileTypes: ["image/*"],
+      files: files,
+    });
+  });
+}
+// End Filepond Image Multi
+
 // Chart
 const revenueChartElement = document.querySelector("#revenue-chart");
 if (revenueChartElement) {
-  new Chart(revenueChartElement, {
-    type: "line",
-    data: {
-      labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
-      datasets: [
-        {
-          label: "# of Votes",
-          data: [12, 19, 3, 5, 2, 3],
-          borderWidth: 1,
-          borderColor: "#4e73df",
-        },
-        {
-          label: "# of Votes",
-          data: [13, 15, 2, 8, 1, 2],
-          borderWidth: 1,
-          borderColor: "#1cc88a",
-        },
-      ],
+  // Lấy ngày hiện tại
+  const now = new Date();
+
+  // Lấy tháng và năm hiện tại
+  const currentMonth = now.getMonth() + 1; // getMonth() trả về giá trị từ 0 đến 11, nên cần +1
+  const currentYear = now.getFullYear();
+
+  // Tạo một đối tượng Date mới cho tháng trước
+  // Nếu hiện tại là tháng 1 thì new Date(currentYear, 0 - 1, 1) sẽ tự động chuyển thành tháng 12 của năm trước.
+  const previousMonthDate = new Date(currentYear, now.getMonth() - 1, 1);
+
+  // Lấy tháng và năm từ đối tượng previousMonthDate
+  const previousMonth = previousMonthDate.getMonth() + 1;
+  const previousYear = previousMonthDate.getFullYear();
+
+  // Lấy ra tổng số ngày
+  const daysInMonthCurrent = new Date(currentYear, currentMonth, 0).getDate();
+  const daysInMonthPrevious = new Date(previousYear, previousMonth, 0).getDate();
+  const days = daysInMonthCurrent > daysInMonthPrevious ? daysInMonthCurrent : daysInMonthPrevious;
+  const arrayDay = [];
+  for (let i = 1; i <= days; i++) {
+    arrayDay.push(i);
+  }
+
+  const dataFinal = {
+    currentMonth: currentMonth,
+    currentYear: currentYear,
+    previousMonth: previousMonth,
+    previousYear: previousYear,
+    arrayDay: arrayDay,
+  };
+
+  fetch(`/${pathAdmin}/dashboard/revenue-chart`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-    options: {
-      scales: {
-        y: {
-          beginAtZero: true,
-        },
-      },
-      maintainAspectRatio: false,
-    },
-  });
+    body: JSON.stringify(dataFinal),
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.code == "success") {
+        new Chart(revenueChart, {
+          type: "line",
+          data: {
+            labels: ["01", "02", "03", "04", "05", "06"],
+            labels: arrayDay,
+            datasets: [
+              {
+                label: "Tháng 10/2025",
+                data: [1200000, 1900000, 3000000, 1500000, 2000000, 2600000],
+                label: `Tháng ${currentMonth}/${currentYear}`,
+                data: data.dataMonthCurrent,
+                borderWidth: 2,
+                borderColor: "#36A1EA",
+              },
+              {
+                label: "Tháng 09/2025",
+                data: [1000000, 1600000, 2800000, 1800000, 2300000, 2400000],
+                label: `Tháng ${previousMonth}/${previousYear}`,
+                data: data.dataMonthPrevious,
+                borderWidth: 2,
+                borderColor: "#FE6383",
+              },
+            ],
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+            maintainAspectRatio: false,
+          },
+        });
+      }
+    });
 }
 // End Chart
 
@@ -327,6 +408,14 @@ if (tourCreateForm) {
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
 
+      // images
+      if (filePondMulti.images.getFiles().length > 0) {
+        filePondMulti.images.getFiles().forEach((item) => {
+          formData.append("images", item.file);
+        });
+      }
+      // End images
+
       fetch(`/${pathAdmin}/tour/create`, {
         method: "POST",
         body: formData,
@@ -427,6 +516,14 @@ if (tourEditForm) {
       formData.append("information", information);
       formData.append("schedules", JSON.stringify(schedules));
 
+      // images
+      if (filePondMulti.images.getFiles().length > 0) {
+        filePondMulti.images.getFiles().forEach((item) => {
+          formData.append("images", item.file);
+        });
+      }
+      // End images
+
       fetch(`/${pathAdmin}/tour/edit/${id}`, {
         method: "PATCH",
         body: formData,
@@ -479,12 +576,40 @@ if (orderEditForm) {
       },
     ])
     .onSuccess((event) => {
+      const id = event.target.id.value;
       const fullname = event.target.fullName.value;
       const phone = event.target.phone.value;
       const note = event.target.note.value;
       const paymentMethod = event.target.paymentMethod.value;
       const paymentStatus = event.target.paymentStatus.value;
       const status = event.target.status.value;
+
+      const dataFinal = {
+        fullName: fullName,
+        phone: phone,
+        note: note,
+        paymentMethod: paymentMethod,
+        paymentStatus: paymentStatus,
+        status: status,
+      };
+
+      fetch(`/${pathAdmin}/order/edit/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataFinal),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.code == "error") {
+            notify.error(data.message);
+          }
+
+          if (data.code == "success") {
+            notify.success(data.message);
+          }
+        });
     });
 }
 //End Order Edit Form
