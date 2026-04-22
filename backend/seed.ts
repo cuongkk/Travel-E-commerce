@@ -1,529 +1,308 @@
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import slugify from "slugify";
+/**
+ * SEED SCRIPT - Sinh dữ liệu mẫu cho TravelKa
+ * Chạy: yarn seed
+ *
+ * Sẽ sinh:
+ *  - 300 Orders (phân bổ đều 6 tháng gần nhất, có "ngày cao điểm")
+ *  - 5 Vouchers mẫu
+ *  - 100 Reviews (gắn với tours và gears có sẵn)
+ */
 
-import { connectDB } from "./src/configs/database.config";
-import Category from "./src/modules/category/category.model";
-import SettingWebsiteInfo from "./src/modules/setting/setting.model";
-import Role from "./src/modules/user/role.model";
-import City from "./src/modules/city/city.model";
+import "dotenv/config";
+import mongoose from "mongoose";
+
+// ──────────────────────────────────────────────
+// Models
+// ──────────────────────────────────────────────
+import Order from "./src/modules/order/order.model";
 import Tour from "./src/modules/tour/tour.model";
 import Gear from "./src/modules/gear/gear.model";
-import Journal from "./src/modules/journal/journal.model";
 import AccountAdmin from "./src/modules/auth/account.model";
-import Order from "./src/modules/order/order.model";
+import Voucher from "./src/modules/voucher/voucher.model";
+import Review from "./src/modules/review/review.model";
 
-dotenv.config();
+// ──────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────
+const rand = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
-type DemoTourInput = {
-  name: string;
-  categoryId: string;
-  basePrice: number;
-  cityIds: string[];
-  days: number;
+const pick = <T>(arr: T[]): T => arr[rand(0, arr.length - 1)];
+
+/** Sinh ngày ngẫu nhiên trong 1 tháng cụ thể, thiên về cuối tuần */
+const randDateInMonth = (year: number, month: number): Date => {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const day = rand(1, daysInMonth);
+  const hour = rand(8, 22);
+  const minute = rand(0, 59);
+  return new Date(year, month - 1, day, hour, minute);
 };
 
-const randomFrom = <T>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
+const PAYMENT_METHODS = ["money", "bank", "vnpay"] as const;
+const ORDER_STATUSES = ["initial", "done", "cancel"] as const;
+type OrderStatus = (typeof ORDER_STATUSES)[number];
 
-const toDateISO = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+// Phân phối trạng thái đơn hàng theo xác suất
+const pickStatus = (): OrderStatus => {
+  const r = Math.random();
+  if (r < 0.55) return "done";
+  if (r < 0.80) return "initial";
+  return "cancel";
 };
 
-const randomPhone = (index: number): string => `09${String(10000000 + index).slice(0, 8)}`;
+const VIET_NAMES = [
+  "Nguyễn Văn An", "Trần Thị Bích", "Lê Minh Cường", "Phạm Thị Dung",
+  "Hoàng Văn Em", "Vũ Thị Fương", "Đặng Minh Giang", "Bùi Thị Hoa",
+  "Đinh Văn Hùng", "Lý Thị Kim", "Phan Văn Long", "Đỗ Thị Mai",
+  "Ngô Văn Nam", "Hồ Thị Oanh", "Dương Minh Phúc", "Trịnh Thị Quỳnh",
+];
 
-async function seed() {
-  await connectDB();
+const PHONES = ["0901", "0911", "0932", "0987", "0356", "0768", "0345", "0912"];
+const randPhone = () => pick(PHONES) + rand(100000, 999999).toString();
 
-  const plainPassword = "Cc123456@";
-  const hashedPassword = await bcrypt.hash(plainPassword, 10);
+// ──────────────────────────────────────────────
+// Main
+// ──────────────────────────────────────────────
+async function main() {
+  const uri = process.env.DATABASE;
+  if (!uri) throw new Error("DATABASE env not set!");
 
-  await Order.deleteMany({});
-  await Journal.deleteMany({});
-  await Gear.deleteMany({});
-  await Tour.deleteMany({});
-  await Category.deleteMany({});
-  await City.deleteMany({});
-  await AccountAdmin.deleteMany({});
-  await Role.deleteMany({});
-  await SettingWebsiteInfo.deleteMany({});
+  console.log("🔗 Connecting to database...");
+  await mongoose.connect(uri);
+  console.log("✅ Connected!\n");
 
-  const roles = await Role.insertMany([
-    {
-      name: "Admin",
-      description: "Toàn quyền quản trị hệ thống",
-      permissions: ["*"],
-      slug: "admin",
-      deleted: false,
-    },
-    {
-      name: "Operator",
-      description: "Quản lý dữ liệu tour và đơn hàng",
-      permissions: ["tour-view", "tour-create", "tour-edit", "tour-delete", "tour-trash"],
-      slug: "operator",
-      deleted: false,
-    },
-    {
-      name: "User",
-      description: "Tài khoản khách hàng",
-      permissions: [],
-      slug: "user",
-      deleted: false,
-    },
+  // Lấy danh sách Tours, Gears, Accounts có sẵn
+  const [tours, gears, accounts] = await Promise.all([
+    Tour.find({ deleted: false, status: "active" }).lean(),
+    Gear.find({ deleted: false, status: "active" }).lean(),
+    AccountAdmin.find({ deleted: false, role: "client" }).lean(),
   ]);
-  console.log(`Inserted roles: ${roles.length}`);
 
-  const accountPayload = [
-    {
-      fullName: "Nguyễn Hoàng Nam",
-      email: "admin@example.com",
-      phone: "0900000000",
-      positionCompany: "Quản trị hệ thống",
-      role: "admin",
-      status: "active",
-      password: hashedPassword,
-      avatar: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=256&auto=format&fit=crop",
-      slug: slugify("Nguyễn Hoàng Nam", { lower: true, strict: true }),
-      deleted: false,
-    },
-    {
-      fullName: "Trần Thu Hà",
-      email: "user@example.com",
-      phone: "0900000001",
-      role: "client",
-      status: "active",
-      password: hashedPassword,
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=256&auto=format&fit=crop",
-      slug: slugify("Trần Thu Hà", { lower: true, strict: true }),
-      deleted: false,
-    },
-    {
-      fullName: "Lê Văn C",
-      email: "clientc@example.com",
-      phone: "0900000004",
-      role: "client",
-      status: "active",
-      password: hashedPassword,
-      slug: slugify("Lê Văn C", { lower: true, strict: true }),
-      deleted: false,
-    },
-    {
-      fullName: "Trần Thị D",
-      email: "clientd@example.com",
-      phone: "0900000005",
-      role: "client",
-      status: "active",
-      password: hashedPassword,
-      slug: slugify("Trần Thị D", { lower: true, strict: true }),
-      deleted: false,
-    },
+  if (tours.length === 0 && gears.length === 0) {
+    console.log("⚠️  Không có Tour hoặc Gear nào trong DB. Hãy tạo trước rồi seed.");
+    process.exit(1);
+  }
+
+  console.log(`📊 Found: ${tours.length} tours | ${gears.length} gears | ${accounts.length} accounts\n`);
+
+  // ────── 1. VOUCHERS ──────
+  console.log("🏷️  Seeding Vouchers...");
+  const voucherDocs = [
+    { code: "SUMMER25", name: "Hè Rực Rỡ 25%", discountType: "percent", discountValue: 25, minOrderValue: 2000000, maxUsage: 100, expiresAt: new Date("2025-12-31"), status: "active" },
+    { code: "TET2024", name: "Tết Nguyên Đán", discountType: "fixed", discountValue: 500000, minOrderValue: 5000000, maxUsage: 50, expiresAt: new Date("2025-02-28"), status: "active" },
+    { code: "NEWUSER10", name: "Khách Hàng Mới", discountType: "percent", discountValue: 10, minOrderValue: 1000000, maxUsage: 200, expiresAt: new Date("2025-12-31"), status: "active" },
+    { code: "FLASH50", name: "Flash Sale 50%", discountType: "percent", discountValue: 50, minOrderValue: 10000000, maxUsage: 20, expiresAt: new Date("2025-12-31"), status: "inactive" },
+    { code: "VIP300K", name: "VIP 300K", discountType: "fixed", discountValue: 300000, minOrderValue: 3000000, maxUsage: 500, expiresAt: new Date("2026-06-30"), status: "active" },
   ];
 
-  const accounts = await AccountAdmin.insertMany(accountPayload);
-  console.log(`Inserted accounts: ${accounts.length}`);
+  let voucherCount = 0;
+  for (const v of voucherDocs) {
+    const exists = await Voucher.findOne({ code: v.code });
+    if (!exists) {
+      await Voucher.create(v);
+      voucherCount++;
+    }
+  }
+  console.log(`   ✅ Created ${voucherCount} new vouchers (skipped duplicates)\n`);
 
-  const adminAccounts = accounts.filter((account) => account.role === "admin");
-  const clientAccounts = accounts.filter((account) => account.role === "client");
+  // ────── 2. ORDERS ──────
+  console.log("🛒 Seeding Orders (300 đơn hàng trong 6 tháng)...");
 
-  const setting = await SettingWebsiteInfo.create({
-    websiteName: "TravelKa",
-    phone: "0123456789",
-    email: "info@travel.com",
-    address: "123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh",
-    logo: "/header/logo.png",
-    favicon: "/favicon.ico",
-  });
-  console.log("Inserted setting website info", setting._id.toString());
+  const now = new Date();
+  const orders: any[] = [];
 
-  const topCategories = await Category.insertMany([
-    {
-      name: "Tour Trong Nước",
-      slug: "tour-trong-nuoc",
-      position: 1,
-      status: "active",
-      description: "Danh mục tour trong nước",
-    },
-    {
-      name: "Tour Nước Ngoài",
-      slug: "tour-nuoc-ngoai",
-      position: 2,
-      status: "active",
-      description: "Danh mục tour nước ngoài",
-    },
-    {
-      name: "Tour Nghỉ Dưỡng",
-      slug: "tour-nghi-duong",
-      position: 3,
-      status: "active",
-      description: "Danh mục tour nghỉ dưỡng",
-    },
-  ]);
+  for (let i = 0; i < 300; i++) {
+    // Phân bổ tháng: 6 tháng gần nhất với tháng gần hơn có nhiều đơn hơn
+    const monthsBack = rand(0, 5);
+    let targetMonth = now.getMonth() + 1 - monthsBack;
+    let targetYear = now.getFullYear();
+    if (targetMonth <= 0) { targetMonth += 12; targetYear -= 1; }
 
-  const childCategories = await Category.insertMany([
-    {
-      name: "Miền Bắc",
-      parent: topCategories[0]?._id?.toString(),
-      slug: "mien-bac",
-      position: 1.1,
-      status: "active",
-    },
-    {
-      name: "Miền Trung",
-      parent: topCategories[0]?._id?.toString(),
-      slug: "mien-trung",
-      position: 1.2,
-      status: "active",
-    },
-    {
-      name: "Miền Nam",
-      parent: topCategories[0]?._id?.toString(),
-      slug: "mien-nam",
-      position: 1.3,
-      status: "active",
-    },
-    {
-      name: "Đông Nam Á",
-      parent: topCategories[1]?._id?.toString(),
-      slug: "dong-nam-a",
-      position: 2.1,
-      status: "active",
-    },
-    {
-      name: "Châu Âu",
-      parent: topCategories[1]?._id?.toString(),
-      slug: "chau-au",
-      position: 2.2,
-      status: "active",
-    },
-  ]);
+    const createdAt = randDateInMonth(targetYear, targetMonth);
 
-  const categories = [...topCategories, ...childCategories];
-  console.log(`Inserted categories: ${categories.length}`);
+    // Items: mix tour + gear
+    const items: any[] = [];
+    const hasTour = tours.length > 0 && Math.random() > 0.3;
+    const hasGear = gears.length > 0 && Math.random() > 0.5;
 
-  const cities = await City.insertMany([
-    { name: "Hà Nội" },
-    { name: "Đà Nẵng" },
-    { name: "TP Hồ Chí Minh" },
-    { name: "Nha Trang" },
-    { name: "Phú Quốc" },
-    { name: "Huế" },
-    { name: "Bangkok" },
-    { name: "Singapore" },
-    { name: "Paris" },
-    { name: "Tokyo" },
-  ]);
-  console.log(`Inserted cities: ${cities.length}`);
+    if (hasTour) {
+      const tour = pick(tours) as any;
+      const qty = rand(1, 4);
+      const price = Number(tour.priceNew || tour.price || 1500000);
+      items.push({ type: "tour", id: tour._id, name: tour.name, price, quantity: qty, total: price * qty });
+    }
 
-  const categoryBySlug = new Map(categories.map((item) => [item.slug, item]));
-  const cityIds = cities.map((city) => city._id.toString());
+    if (hasGear || items.length === 0) {
+      if (gears.length > 0) {
+        const gear = pick(gears) as any;
+        const qty = rand(1, 3);
+        const price = Number(gear.price || 500000);
+        items.push({ type: "gear", id: gear._id, name: gear.name, price, quantity: qty, total: price * qty });
+      }
+    }
 
-  const demoTours: DemoTourInput[] = [
-    {
-      name: "Đà Nẵng - Hội An 3N2Đ",
-      categoryId: categoryBySlug.get("mien-trung")?._id?.toString() || topCategories[0]._id.toString(),
-      basePrice: 3200000,
-      cityIds: [cityIds[1], cityIds[5]],
-      days: 3,
-    },
-    {
-      name: "Hà Nội - Hạ Long 4N3Đ",
-      categoryId: categoryBySlug.get("mien-bac")?._id?.toString() || topCategories[0]._id.toString(),
-      basePrice: 4500000,
-      cityIds: [cityIds[0]],
-      days: 4,
-    },
-    {
-      name: "Phú Quốc nghỉ dưỡng 3N2Đ",
-      categoryId: categoryBySlug.get("tour-nghi-duong")?._id?.toString() || topCategories[2]._id.toString(),
-      basePrice: 5200000,
-      cityIds: [cityIds[4], cityIds[2]],
-      days: 3,
-    },
-    {
-      name: "Singapore khám phá đô thị 4N3Đ",
-      categoryId: categoryBySlug.get("dong-nam-a")?._id?.toString() || topCategories[1]._id.toString(),
-      basePrice: 9800000,
-      cityIds: [cityIds[7]],
-      days: 4,
-    },
-    {
-      name: "Bangkok - Pattaya 5N4Đ",
-      categoryId: categoryBySlug.get("dong-nam-a")?._id?.toString() || topCategories[1]._id.toString(),
-      basePrice: 8600000,
-      cityIds: [cityIds[6]],
-      days: 5,
-    },
-    {
-      name: "Paris - Châu Âu 7N6Đ",
-      categoryId: categoryBySlug.get("chau-au")?._id?.toString() || topCategories[1]._id.toString(),
-      basePrice: 32900000,
-      cityIds: [cityIds[8]],
-      days: 7,
-    },
-    {
-      name: "Tokyo mùa lá đỏ 5N4Đ",
-      categoryId: categoryBySlug.get("tour-nuoc-ngoai")?._id?.toString() || topCategories[1]._id.toString(),
-      basePrice: 23900000,
-      cityIds: [cityIds[9]],
-      days: 5,
-    },
-    {
-      name: "Nha Trang biển xanh 3N2Đ",
-      categoryId: categoryBySlug.get("mien-trung")?._id?.toString() || topCategories[0]._id.toString(),
-      basePrice: 4100000,
-      cityIds: [cityIds[3]],
-      days: 3,
-    },
-    {
-      name: "Sài Gòn - Mekong 2N1Đ",
-      categoryId: categoryBySlug.get("tour-trong-nuoc")?._id?.toString() || topCategories[0]._id.toString(),
-      basePrice: 2600000,
-      cityIds: [cityIds[2]],
-      days: 2,
-    },
-    {
-      name: "Huế - Đà Nẵng - Hội An 4N3Đ",
-      categoryId: categoryBySlug.get("mien-trung")?._id?.toString() || topCategories[0]._id.toString(),
-      basePrice: 5600000,
-      cityIds: [cityIds[5], cityIds[1]],
-      days: 4,
-    },
-    {
-      name: "Đà Lạt săn mây 3N2Đ",
-      categoryId: categoryBySlug.get("tour-nghi-duong")?._id?.toString() || topCategories[2]._id.toString(),
-      basePrice: 3800000,
-      cityIds: [cityIds[2]],
-      days: 3,
-    },
-    {
-      name: "Liên tuyến Châu Âu 10N9Đ",
-      categoryId: categoryBySlug.get("chau-au")?._id?.toString() || topCategories[1]._id.toString(),
-      basePrice: 48900000,
-      cityIds: [cityIds[8], cityIds[9]],
-      days: 10,
-    },
-  ];
+    if (items.length === 0) continue;
 
-  const today = new Date();
-  const tours = await Tour.insertMany(
-    demoTours.map((tour, index) => {
-      const departure = new Date(today);
-      departure.setDate(today.getDate() + 5 + index * 2);
+    const subTotal = items.reduce((sum, item) => sum + item.total, 0);
+    const status = pickStatus();
 
-      const endDate = new Date(departure);
-      endDate.setDate(departure.getDate() + Math.max(1, tour.days - 1));
+    // Giảm giá nhỏ (~20% orders có discount)
+    const discount = Math.random() < 0.2 ? Math.round(subTotal * rand(5, 25) / 100) : 0;
+    const total = Math.max(subTotal - discount, 0);
 
-      const discount = Math.floor(tour.basePrice * 0.1);
-      const adminOwner = adminAccounts[index % adminAccounts.length];
-      const salePrice = tour.basePrice - discount;
-      const stock = 25 + index * 3;
-      const rating = Number((4.5 + (index % 5) * 0.1).toFixed(1));
-      const reviewCount = 120 + index * 37;
+    const account = accounts.length > 0 ? pick(accounts) as any : null;
 
-      return {
-        name: tour.name,
-        category: tour.categoryId,
-        position: index + 1,
-        status: index % 7 === 0 ? "inactive" : "active",
-        avatar: `https://picsum.photos/seed/tour-${index + 1}/640/420`,
-        images: [`https://picsum.photos/seed/tour-${index + 1}-a/1200/800`, `https://picsum.photos/seed/tour-${index + 1}-b/1200/800`, `https://picsum.photos/seed/tour-${index + 1}-c/1200/800`],
-        price: tour.basePrice,
-        priceNew: salePrice,
-        stock,
-        locations: tour.cityIds,
-        time: `${tour.days} ngày`,
-        departureDate: departure,
-        endDate,
-        information: `${tour.name} là hành trình du lịch trọn gói với lịch trình hợp lý, khách sạn tiêu chuẩn và hướng dẫn viên nhiệt tình.`,
-        schedules: [
-          {
-            title: "Ngày 1",
-            description: "Đón khách tại điểm hẹn, khởi hành và tham quan các điểm nổi bật trong ngày.",
-          },
-          {
-            title: `Ngày ${Math.min(2, tour.days)}`,
-            description: "Tiếp tục tham quan, trải nghiệm đặc sản địa phương và nghỉ dưỡng theo lịch trình.",
-          },
-        ],
-        rating,
-        reviewCount,
-        createdBy: adminOwner?._id?.toString(),
-        updatedBy: adminOwner?._id?.toString(),
-        slug: slugify(`${tour.name}-${index + 1}`, { lower: true, strict: true }),
-        deleted: false,
-      };
-    }),
-  );
-  console.log(`Inserted tours: ${tours.length}`);
-
-  const gears = await Gear.insertMany([
-    {
-      name: "Balo Atlas Pro 45L",
-      category: "Phụ kiện",
-      subtitle: "Balo đa năng cho chuyến đi dài ngày",
-      description: "Balo linh hoạt, chia ngăn hợp lý cho hành trình dài ngày.",
-      price: 280,
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDKXiUfAU51NkNI2y3m6KWXq5sEy_I5-hHjXjmDqoq-xKcLEfgOsF7i3LHGFHRmR55V63CO5LFhiukpd3eU8WmT-rewZMhVJcssqE8lKLhAS43h7gj3M1HiZ_t7Vc-Z8DHiuEhm3gDH0w9VO5tzunNVXZyRVHpgBaBDRuYk5ISuC9AIqAQFreUyd1-c4LCrnYEroLndcBPodXdEaseFADasCuCx3tFQMuyBMniDAzAZ6jTITi4MjOG3Gt7vMop8_e5ODMoE5IYEtBY",
-      badge: "MỚI",
-      status: "active",
-    },
-    {
-      name: "Giày Velo Trail 2.0",
-      category: "Giày",
-      subtitle: "Giày leo núi nhẹ và bám đường",
-      description: "Giày du lịch địa hình nhẹ, bền và ôm chân.",
-      price: 145,
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCH_9EjokL_fsCK2Ym0OMulpok7avbSSclFDLukuKAt2AN6gGLjUtIB-9phmihUdnfOAdaWBjV4S3lRH3S81cyyTpxtvYLQoYtAAC4AVd7s6ZDc_k8uLOQqp75_dMz459APCFPzsqsCPLiTlXtaVX_tQcEP4gLo6118agZqYVHnnYlq6NNORN1mgsIATGeUoSnNRdBVw5QUtou0t6Mpk4qjmoLRgw7NbW5ZRK6PEXUM-vTuWYmmkWZqxfrip8KXe4b_zLB-cKN977U",
-      badge: "ƯU ĐÃI",
-      status: "active",
-    },
-    {
-      name: "Máy ảnh Lumina X-1",
-      category: "Công nghệ",
-      subtitle: "Bộ chụp ảnh du lịch gọn nhẹ",
-      description: "Máy ảnh gọn nhẹ cho người sáng tạo nội dung khi di chuyển.",
-      price: 1200,
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDlOlef5-HC4fDsn9vamVgkLmSrtds1fFBONyEr82gz16AZ_0hkpgAKBb89Ge8zKxXuriuOqxn2VDlztrOAqH9Hxc-ajP5SUTNDo3kR9Pm6HW03B9-POamARZtY3LPwv3DXiiG2afQXp3P79Kw6UMCd9C38_TpWd6WKUTMyd_BangpaWn2qZZjBqiV_kO7twPrh0uPixoSFE8jdtoQJcUovGPG-17KeNtdUtNI2apgMdq-aak8-aP3t7ndOxsLMfUKamtBxCDw_a7g",
-      status: "active",
-    },
-    {
-      name: "Bình giữ nhiệt Iso-Flask Elite",
-      category: "Đồ dùng",
-      subtitle: "Bình giữ nhiệt cho hoạt động ngoài trời",
-      description: "Bình giữ nhiệt bền, phù hợp cho trekking và camping.",
-      price: 65,
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuA_tA4qy7CPtfOzDSHSy6Verj2dCXciLVMfGKespYd_tcX8cGRcQ3_xCASz1vi19cErTk2M5fT0PkzHgP8v65CNNJqzu1ZPokHUQCnUYSWFOzY_GUKhZbEBHTVlSdHFPHWQCFGgZGb6rhOYpKeS3KQh90zxq_knI2JRP6uMvy_l5dZMaNfEDLVvDVdaETfutfqd_BJgv4HnCVt9Qs15ag9aNUke0FjQ8sVepTlrkzuC4FnZKQmD0sjuM-PgLXJw7bFI0xoaxz-oH6A",
-      badge: "NỔI BẬT",
-      status: "active",
-    },
-  ]);
-  console.log(`Inserted gears: ${gears.length}`);
-
-  const journals = await Journal.insertMany([
-    {
-      title: "Nghỉ dưỡng xanh tại Bali: trải nghiệm cao cấp bền vững",
-      summary: "Khám phá một khu nghỉ dưỡng theo đuổi phong cách sống xanh nhưng vẫn giữ trọn sự sang trọng.",
-      tag: "ĐÁNH GIÁ KHÁCH SẠN",
-      author: "Lê Minh Thư",
-      dateLabel: "24/10/2024",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDrvSuc1qJ3fTto2_-t7MHrm1t8LsCC2fGE7thQN6obGLsMwCgyToU_cD23hQUFoyvBCP7QXv4d8c7dtKrjeSEP5GuSxilYFsMH6GzYz1Qmxqg7BzfC0TwJ17Hru1OF-evgnH-2RSb5jQUYsmd3u0wqXDWWgrUDZoBqeP4c-Ve5a_Ekw78YIXZku8BcKLl0xMJcXv6FbSBIYkBSDUykvtr77D34ycf5Cop97pZpSeHNVwswJRGgTAxMCgtt9XYrghhf4wqMIqtz6Zc",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBx0T42DCxqSHSikJLsVlQ8jBXqYw36gEA6UjdaA9AIetxC4nsb9SftO-lGzuZTrPnirDygQnqQtFZR-vXOHG-kqPQ3ug1dXXh0HwivO94J3X9hljsuSh3oeIeSVAZsj6CQxHQxG20DBhSEQLrSez3xyKjJzMCfFed2AoE0C4q1BGDlx7cCevnbjwPyBk5YwNozb6oZoGF6iFoYAiVGdFSfuZiH6Q8VJZX4A64MeerVL2eTmgwBrcmh-Fyc1xF99Qp7YaVpg0nmkaM",
-      trendingScore: 85,
-      status: "active",
-    },
-    {
-      title: "Trekking Andes một mình: hành trình vượt giới hạn",
-      summary: "Nhật ký vượt núi ở độ cao lớn và những bài học về thể lực, tinh thần trên cung đường khắc nghiệt.",
-      tag: "HÀNH TRÌNH",
-      author: "Nguyễn Tuấn Kiệt",
-      dateLabel: "19/10/2024",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDZszjkq1awXYWGv0STIyvCy1lEuDhAI-08ZzmbcZvFQE_iibR_GLuP8ghWj1A6HayDeY5RBsmUY8jjRDc59TQKJyJe6UdKXuRXHvCsuCzHamxtniPOkRC-KQPpUzMlwEL4b4JI-7SI9LIoxhLFeFzE70BK1fP6noR6dZcbqTgU4xeF2blfsrorJ3P_f8D4IhaJLZbHAbtwZcS8sr3JQ7rgXu90drbB-epWn-J_hm4xPrVpz4U7QWAM8X6qRNcyZVC2JtyrYqqPVAo",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCmfeMxdfkG5uKdchB4u_B4gtCRg4getijNvgsmwv_1Eb3QpwpuQkUXwwcgmJz22pYNwX-s9FfY8A-G30NFByMYiGawQCjQAiZ674i5hQn4yYtag7tRDYdgsBSHyqIbVSyL3UVWqWHfS5EQchQnNwd3DoLyOPlrjT_jy7LL4hiwr27yei-8RJHOK_H-HZ69dlPRc92c2e9V_8AfO-6c-pBeXLnh0BEfvP658DOmJ8dFnfUIMFB-jE7VwVDHihNVkgBk1psLGnlTuLc",
-      trendingScore: 78,
-      status: "active",
-    },
-    {
-      title: "Người du mục biển Bajau Laut và nét văn hóa độc đáo",
-      summary: "Cùng tìm hiểu làng nổi và kỹ năng lặn biển truyền thống của cộng đồng sống giữa đại dương.",
-      tag: "VĂN HÓA",
-      author: "Phạm Gia Huy",
-      dateLabel: "15/10/2024",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBUmEQV2VE8GYOkUDTbrxOfLaZwr7QQRao0fuZaFILJ9KXTznQsAaQS8OXllrP5KYw7L2akGLMUiih-YRZq3JXKQnCwCVSWNqvqMDlXwbaYnmv4TMVXBec0wCkgvnHYveSWpfbUrtASnQo26cPIy8ZOWNI-2tyRf30xx188Dn4GI7GCFyAt0VE4pk_ZaaL6Uu7sPKEzW2ensmIDkyplDbipFj16-_cxI9NvHwVAcuHReWzKHycYswgBXH5vOHowLNESofzoUusp6D8",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDxS-iRNGdPa5zMRgCDQTl1e77Dl6DUFm2luvDB9THatrGRqGWva09HiX0d7Il78edzLFhH37ZZoSl7BEjhxtzRNC9OgiXpd6flF5vwhQOX52ueBZlZkqHSr1q9zHiwKnP8CKlNKpl7z-bNOB3Vr268c00XyXclWAzmxsh-dqGsSsCbWqzGXS2DUpeIET5oRzW5jPLSqh3M_DU-6Il-8DIpa2Ml3gzAZZun-Btlc65N-HVMRyfX7wkwnnnRGbOd7yQWBW8jYUGT9Cw",
-      trendingScore: 92,
-      status: "active",
-    },
-    {
-      title: "Vì sao con người luôn khao khát xuất phát",
-      summary: "Góc nhìn tâm lý về nhu cầu dịch chuyển, khám phá và tìm kiếm ý nghĩa qua mỗi chuyến đi.",
-      tag: "TẢN MẠN",
-      author: "Trần Bảo Linh",
-      dateLabel: "08/10/2024",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBtfGWjGXNXVG4l8kY_LEE9RQv_dxRwI-goNkUQZi300a_3KC45A_byCn2broxHCCf9FsUYIUN76g1GKwu-9SWmgTD4rOeA0wDHrgyCA3fFd5uhXHFQEPVr4o4gLtgt_LkS3DIC-IxKFuD4RkstxDhhhM8eRHUAOCIZv6OO_cLB7LFb0DyOW4WMfZfu-4kZCLKKvVi_vfnLJzwmM-pTNtCZ7ZVSPe3phvdX7tFLhxe4zXapKARVh9njmWpLhjrSayU5Xnb20Jw42H8",
-      avatar:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBDzn2qkgmPW6fHsRfPXnkLrM7PsfZKeQV1QyisGi9i7HfsHs0g62CyxGvHKmlOenUStYkDMjIzd27oSuL_fifX85Wnlqolco8Fc1ZUdx4b3TC8nPJO_smYbH9psEMkNnSYP-eWWgBbkO8gBGdLvJoMhtFa_BO9pC94CGlMT3C6MmNWr19mBj-JMp_fUhk9IGsc597-XXlJEpQGWu7AOHhZ0ElXxi5Raf6j78X1McIy-012gP7swxL-AijWu-e44esEjTk3tn84c84",
-      trendingScore: 66,
-      status: "active",
-    },
-  ]);
-  console.log(`Inserted journals: ${journals.length}`);
-
-  const paymentMethods = ["money", "bank", "vnpay", "zalopay"];
-  const paymentStatuses = ["unpaid", "paid"];
-  const orderStatuses = ["initial", "done", "cancel"];
-
-  const customerNames = ["Nguyễn Văn A", "Trần Thị B", "Lê Văn C", "Phạm Thị D", "Hoàng Văn E", "Đỗ Thị F", "Vũ Văn G", "Bùi Thị H", "Đặng Văn I", "Ngô Thị K"];
-
-  const ordersPayload = Array.from({ length: 30 }).map((_, index) => {
-    const itemCount = 1 + Math.floor(Math.random() * 3);
-    const pickedTours = [...tours].sort(() => 0.5 - Math.random()).slice(0, itemCount);
-
-    const items = pickedTours.map((tour) => {
-      const quantity = 1 + Math.floor(Math.random() * 4);
-      const unitPrice = Number((tour as any).priceNew || (tour as any).price || 0);
-      const locationFrom = randomFrom(cityIds);
-
-      const baseDate = new Date();
-      baseDate.setDate(baseDate.getDate() + 3 + Math.floor(Math.random() * 20));
-
-      return {
-        tourId: (tour as any)._id?.toString(),
-        name: (tour as any).name,
-        avatar: (tour as any).avatar,
-        locationFrom,
-        departureDate: toDateISO(baseDate),
-        quantity,
-        unitPrice,
-        price: unitPrice,
-      };
-    });
-
-    const subTotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-    const discount = index % 4 === 0 ? Math.floor(subTotal * 0.05) : 0;
-    const total = subTotal - discount;
-
-    const customerName = randomFrom(customerNames);
-    const selectedClient = randomFrom(clientAccounts);
-
-    return {
-      code: `ORDER${String(index + 1).padStart(4, "0")}`,
-      fullName: customerName,
-      phone: selectedClient?.phone || randomPhone(index + 1),
-      note: index % 5 === 0 ? "Cần hỗ trợ xếp chỗ ngồi gần cửa sổ." : "",
+    orders.push({
+      code: `ORD${createdAt.getFullYear()}${String(createdAt.getMonth() + 1).padStart(2, "0")}${String(i).padStart(4, "0")}`,
+      accountId: account?._id?.toString(),
+      fullName: account?.fullName || pick(VIET_NAMES),
+      phone: account?.phone || randPhone(),
       items,
       subTotal,
       discount,
       total,
-      paymentMethod: randomFrom(paymentMethods),
-      paymentStatus: randomFrom(paymentStatuses),
-      status: randomFrom(orderStatuses),
-      updatedBy: randomFrom(adminAccounts)?._id?.toString(),
+      paymentMethod: pick(PAYMENT_METHODS as unknown as string[]),
+      paymentStatus: status === "done" ? "paid" : "unpaid",
+      status,
       deleted: false,
-    };
-  });
+    });
+  }
 
-  const orders = await Order.insertMany(ordersPayload);
-  console.log(`Inserted orders: ${orders.length}`);
+  // Override createdAt via bulkWrite để set đúng ngày
+  const createdOrders = await Order.insertMany(
+    orders.map((o: any) => ({ ...o, createdAt: o.createdAt })),
+    { timestamps: false }
+  );
 
-  console.log("Seed completed successfully");
-  console.log("Default login emails:");
-  console.log("- admin@example.com");
-  console.log("- user@example.com");
-  console.log("Default password đã được seed từ biến cấu hình nội bộ.");
+  // Cập nhật createdAt thực sự (insertMany không ghi đè timestamps)
+  // Dùng bulkWrite
+  const bulkOps = orders.map((o, idx) => ({
+    updateOne: {
+      filter: { _id: (createdOrders[idx] as any)._id },
+      update: {
+        $set: {
+          createdAt: randDateInMonth(
+            now.getFullYear(),
+            Math.max(1, now.getMonth() + 1 - rand(0, 5))
+          )
+        }
+      }
+    }
+  }));
+  await Order.bulkWrite(bulkOps);
+
+  console.log(`   ✅ Created ${createdOrders.length} orders\n`);
+
+  // ────── 3. REVIEWS ──────
+  console.log("⭐ Seeding Reviews (100 đánh giá)...");
+
+  const REVIEW_CONTENTS = [
+    "Tour tuyệt vời, hướng dẫn viên nhiệt tình, cảnh đẹp. Sẽ quay lại!",
+    "Trải nghiệm không thể quên, đội ngũ phục vụ chuyên nghiệp.",
+    "Chuyến đi rất xứng đáng với số tiền bỏ ra. Recommend!!!",
+    "Cảnh đẹp, đồ ăn ngon, lịch trình hợp lý. Cảm ơn TravelKa!",
+    "Chất lượng vượt mong đợi, sẽ đặt lại lần sau chắc chắn.",
+    "Mọi thứ đều ổn, chỉ có một chút trễ lịch trình.",
+    "Gear chắc chắn, đúng size, ship nhanh. Sẽ mua thêm.",
+    "Sản phẩm đúng mô tả, chất lượng tốt, đóng gói cẩn thận.",
+    "Hơi đắt một chút nhưng chất lượng xứng đáng với giá.",
+    "Tour rất thú vị, phù hợp cho cả gia đình. Highly recommend!",
+  ];
+
+  const reviewsToInsert: any[] = [];
+
+  const doneOrders = await Order.find({ status: "done", deleted: false }).limit(100).lean();
+
+  for (let i = 0; i < 100 && i < doneOrders.length + 50; i++) {
+
+    // Ưu tiên gắn review theo doneOrder thực tế
+    const order: any = i < doneOrders.length ? doneOrders[i] : null;
+    const account: any = accounts.length > 0 ? (order?.accountId
+      ? accounts.find((a: any) => a._id.toString() === order.accountId) || pick(accounts)
+      : pick(accounts)) : null;
+
+    let itemId: string | null = null;
+    let itemType: "tour" | "gear" = "tour";
+
+    if (order?.items?.length > 0) {
+      const item = pick(order.items as any[]) as any;
+      itemId = item.id?.toString() || (item._id?.toString() ?? null);
+      itemType = (item.type as "tour" | "gear") || "tour";
+    } else if (tours.length > 0 && Math.random() > 0.4) {
+      const tour = pick(tours) as any;
+      itemId = tour._id.toString();
+      itemType = "tour";
+    } else if (gears.length > 0) {
+      const gear = pick(gears) as any;
+      itemId = gear._id.toString();
+      itemType = "gear";
+    }
+
+    if (!itemId || !account) continue;
+
+    const rating = rand(3, 5); // Thiên về positive reviews
+
+    reviewsToInsert.push({
+      itemId,
+      itemType,
+      accountId: account._id,
+      orderId: order?._id,
+      rating,
+      content: pick(REVIEW_CONTENTS),
+      status: "active",
+      deleted: false,
+      createdAt: randDateInMonth(
+        now.getFullYear(),
+        Math.max(1, now.getMonth() + 1 - rand(0, 4))
+      ),
+    });
+  }
+
+  if (reviewsToInsert.length > 0) {
+    const createdReviews = await Review.insertMany(reviewsToInsert, { timestamps: false });
+
+    // Cập nhật ratings cho tours và gears
+    const itemGroups = new Map<string, { itemType: string; ratings: number[] }>();
+    for (const r of reviewsToInsert) {
+      const key = `${r.itemType}:${r.itemId}`;
+      if (!itemGroups.has(key)) {
+        itemGroups.set(key, { itemType: r.itemType, ratings: [] });
+      }
+      itemGroups.get(key)!.ratings.push(r.rating);
+    }
+
+    for (const [key, { itemType, ratings }] of itemGroups) {
+      const itemId = key.split(":")[1];
+      const avg = ratings.reduce((s, r) => s + r, 0) / ratings.length;
+      const Model: any = itemType === "tour" ? Tour : Gear;
+      await Model.updateOne({ _id: itemId }, { $set: { rating: parseFloat(avg.toFixed(1)), reviewCount: ratings.length } });
+    }
+
+    console.log(`   ✅ Created ${createdReviews.length} reviews & updated ratings\n`);
+  } else {
+    console.log(`   ⚠️  Không có tài khoản hoặc đơn hàng, bỏ qua reviews\n`);
+  }
+
+  // ────── SUMMARY ──────
+  const totalOrders = await Order.countDocuments({ deleted: false });
+  const totalRevenue = await Order.aggregate([
+    { $match: { deleted: false, status: "done" } },
+    { $group: { _id: null, total: { $sum: "$total" } } },
+  ]);
+
+  console.log("═══════════════════════════════════════════");
+  console.log("🎉 SEED HOÀN THÀNH!");
+  console.log(`   📦 Tổng Orders trong DB   : ${totalOrders}`);
+  console.log(`   💰 Tổng Doanh thu (done)  : ${(totalRevenue[0]?.total || 0).toLocaleString("vi-VN")}đ`);
+  console.log(`   ⭐ Reviews đã tạo         : ${reviewsToInsert.length}`);
+  console.log("═══════════════════════════════════════════\n");
+
+  await mongoose.disconnect();
+  console.log("🔌 Disconnected from DB. Done!");
+  process.exit(0);
 }
 
-void seed();
+main().catch((err) => {
+  console.error("❌ Seed failed:", err);
+  process.exit(1);
+});

@@ -12,7 +12,7 @@ const normalizePrice = (value: unknown): number => {
 };
 
 export const list = async (_req: Request): Promise<{ gearList: any[] }> => {
-  const gearList = await Gear.find({}).sort({ createdAt: -1 });
+  const gearList = await Gear.find({ deleted: false }).sort({ createdAt: -1 });
   return { gearList };
 };
 
@@ -48,7 +48,7 @@ export const createPost = async (req: Request): Promise<{ code: "success" | "err
 
 export const edit = async (req: Request): Promise<{ gearDetail: any } | { code: "success" | "error"; message: string }> => {
   const { id } = req.params as { id: string };
-  const gearDetail = await Gear.findById(id);
+  const gearDetail = await Gear.findOne({ _id: id, deleted: false });
 
   if (!gearDetail) {
     return {
@@ -60,11 +60,49 @@ export const edit = async (req: Request): Promise<{ gearDetail: any } | { code: 
   return { gearDetail };
 };
 
+export const deleteItem = async (req: Request): Promise<any> => {
+  const { id } = req.params;
+
+  const deletedItem = await Gear.findByIdAndUpdate(id, { deleted: true, deletedAt: new Date() }, { new: true });
+  if (!deletedItem) {
+    throw new Error("Gear không tồn tại!");
+  }
+
+  return { deletedGear: deletedItem };
+};
+
+export const getTrash = async (_req: Request): Promise<{ gearList: any[] }> => {
+  const gearList = await Gear.find({ deleted: true }).sort({ deletedAt: -1 });
+  return { gearList };
+};
+
+export const restoreItem = async (req: Request): Promise<any> => {
+  const { id } = req.params;
+
+  const restoredItem = await Gear.findByIdAndUpdate(id, { deleted: false, deletedAt: null }, { new: true });
+  if (!restoredItem) {
+    throw new Error("Gear không tồn tại trong thùng rác!");
+  }
+
+  return { restoredGear: restoredItem };
+};
+
+export const hardDeleteItem = async (req: Request): Promise<any> => {
+  const { id } = req.params;
+
+  const deletedItem = await Gear.findByIdAndDelete(id);
+  if (!deletedItem) {
+    throw new Error("Gear không tồn tại!");
+  }
+
+  return { deletedGear: deletedItem };
+};
+
 export const editPatch = async (req: Request): Promise<{ code: "success" | "error"; message: string }> => {
   const { id } = req.params as { id: string };
   const anyReq = req as any;
 
-  const gearDetail = await Gear.findById(id);
+  const gearDetail = await Gear.findOne({ _id: id, deleted: false });
   if (!gearDetail) {
     return {
       code: "error",

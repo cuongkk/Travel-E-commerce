@@ -52,12 +52,10 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
           const chartData = responseData.data || {};
           const ctx = canvasRef.current;
           if (ctx) {
-            // Destroy previous chart instance if it exists
-            if (chartInstance) {
-              chartInstance.destroy();
-            }
+            const existingChart = Chart.getChart(ctx);
+            if (existingChart) existingChart.destroy();
 
-            const newChart = new Chart(ctx, {
+            new Chart(ctx, {
               type: "line",
               data: {
                 labels: Array.from({ length: daysInMonth }, (_, i) => `${i + 1}`),
@@ -93,8 +91,6 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
                 },
               },
             });
-
-            setChartInstance(newChart);
           }
         }
       } catch (error) {
@@ -106,7 +102,15 @@ export const RevenueChart = ({ selectedMonth }: ChartProps) => {
     };
 
     fetchRevenueChart();
-  }, [selectedMonth, chartInstance]);
+
+    return () => {
+      // Cleanup chart on unmount or when selectedMonth changes
+      if (canvasRef.current) {
+        const chart = Chart.getChart(canvasRef.current);
+        if (chart) chart.destroy();
+      }
+    };
+  }, [selectedMonth]);
 
   return (
     <div className="w-full h-80 bg-gray-50 border border-gray-300 rounded">

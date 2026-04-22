@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPatch = exports.edit = exports.list = void 0;
+exports.create = exports.editPatch = exports.edit = exports.list = void 0;
 const orderService = __importStar(require("./order.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
@@ -53,4 +53,8 @@ exports.editPatch = (0, async_handler_1.asyncHandler)(async (req, res) => {
     if (result.code === "error")
         throw new error_middleware_1.HttpError(400, result.message || "Cập nhật đơn hàng thất bại!");
     (0, response_1.sendSuccess)(res, result.message || "Đã cập nhật đơn hàng!", result);
+});
+exports.create = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const result = await orderService.create(req);
+    (0, response_1.sendSuccess)(res, "Đặt hàng thành công!", result);
 });

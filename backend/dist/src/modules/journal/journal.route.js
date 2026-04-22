@@ -42,4 +42,8 @@ router.get("/list", journalController.list);
 router.post("/create", journalController.createPost);
 router.get("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), journalController.edit);
 router.patch("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), journalController.editPatch);
+router.delete("/delete/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), journalController.deleteItem);
+router.get("/trash", journalController.getTrash);
+router.patch("/restore/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), journalController.restoreItem);
+router.delete("/hard-delete/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), journalController.hardDeleteItem);
 exports.default = router;

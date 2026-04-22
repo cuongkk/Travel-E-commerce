@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaPen } from "react-icons/fa6";
+import { FaPen, FaTrash } from "react-icons/fa6";
 import { useAuth } from "@/hooks/useAuth";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
+import { Editor } from "@tinymce/tinymce-react";
 
 type JournalItem = {
   id: string;
@@ -51,6 +52,8 @@ export default function JournalAdminPage() {
   const [form, setForm] = useState<JournalForm>(defaultForm);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const tinyMceApiKey = process.env.NEXT_PUBLIC_TINYMCE || "";
 
   useEffect(() => {
     showReloadToastIfAny();
@@ -131,6 +134,61 @@ export default function JournalAdminPage() {
     await fetchData();
   };
 
+  const handleGenerateAI = async () => {
+    if (!form.title.trim() || !form.tag.trim()) {
+      alert("Vui lòng nhập Tiêu đề và Tag trước khi dùng AI sinh nội dung!");
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type: "journal-content", title: form.title, category: form.tag }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.code !== "success") {
+        throw new Error(data.message || "Lỗi khi gọi API sinh nội dung");
+      }
+
+      if (data.data) {
+        setForm((prev) => ({ ...prev, summary: data.data }));
+      }
+    } catch (e: any) {
+      alert("Lỗi AI: " + e.message);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa vĩnh viễn bài viết "${title}" không? Hành động này không thể hoàn tác.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/journal/delete/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (!response.ok || data?.success !== true) {
+        throw new Error(data?.message || "Xóa journal thất bại");
+      }
+
+      setReloadToast("success", "Đã xóa bài viết thành công");
+      showReloadToastIfAny();
+      await fetchData();
+    } catch (error: any) {
+      setReloadToast("error", error.message || "Xóa thất bại");
+      showReloadToastIfAny();
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] p-4 md:p-8 space-y-4 md:space-y-5">
       <h1 className="text-2xl font-bold text-gray-800">Quản lý journal</h1>
@@ -151,6 +209,10 @@ export default function JournalAdminPage() {
 
           <button type="button" onClick={() => setShowCreate((prev) => !prev)} className="h-10 px-4 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700">
             {showCreate ? "Đóng form" : "Thêm mới"}
+          </button>
+          
+          <button type="button" onClick={() => router.push('/admin/journal/trash')} className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+            <FaTrash /> Thùng rác
           </button>
         </div>
 
@@ -203,12 +265,32 @@ export default function JournalAdminPage() {
               placeholder="URL avatar tác giả"
               className="h-10 px-3 rounded-lg border border-gray-200 text-sm md:col-span-2"
             />
-            <textarea
-              value={form.summary}
-              onChange={(event) => setForm((prev) => ({ ...prev, summary: event.target.value }))}
-              placeholder="Tóm tắt"
-              className="min-h-24 px-3 py-2 rounded-lg border border-gray-200 text-sm md:col-span-2"
-            />
+            <div className="md:col-span-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Nội dung bài viết (Tóm tắt)</label>
+                <button
+                  type="button"
+                  onClick={handleGenerateAI}
+                  disabled={isGeneratingAI}
+                  className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+                >
+                  {isGeneratingAI ? "Đang sinh bài SEO..." : "✨ AI Viết bài SEO"}
+                </button>
+              </div>
+              <Editor
+                apiKey={tinyMceApiKey}
+                value={form.summary}
+                onEditorChange={(content) => setForm((prev) => ({ ...prev, summary: content }))}
+                init={{
+                  height: 350,
+                  menubar: false,
+                  promotion: false,
+                  plugins: ["lists", "link", "autolink", "preview", "searchreplace", "wordcount"],
+                  toolbar: "undo redo | blocks | bold italic underline | bullist numlist | link | removeformat | preview",
+                  content_style: "body { font-family: Lexend, sans-serif; font-size: 14px; }",
+                }}
+              />
+            </div>
             <div className="md:col-span-2">
               <button type="button" onClick={submitCreate} className="h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
                 Lưu journal
@@ -256,9 +338,14 @@ export default function JournalAdminPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button type="button" onClick={() => router.push(`/admin/journal/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200">
-                        <FaPen className="mx-auto" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button type="button" onClick={() => router.push(`/admin/journal/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center">
+                          <FaPen />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(item.id, item.title)} className="w-8 h-8 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center">
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -73,7 +73,7 @@ export const Header = () => {
         });
 
         const payload = (await response.json()) as ApiResponse<AuthMeData>;
-        const loggedIn = response.ok && payload?.success === true;
+        const loggedIn = response.ok && payload?.success === true && payload.data?.account?.role === "client";
         setIsLoggedIn(loggedIn);
 
         if (loggedIn) {

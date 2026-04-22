@@ -41,7 +41,7 @@ export default function CartPage() {
   }, []);
 
   const subTotal = useMemo(() => {
-    return cart.reduce((total, item) => total + Number(item.priceNew || 0) * Number(item.quantity || 0), 0);
+    return cart.reduce((total, item) => total + Number((item.priceNew && item.priceNew > 0) ? item.priceNew : item.price || 0) * Number(item.quantity || 0), 0);
   }, [cart]);
 
   const taxAmount = useMemo(() => subTotal * 0.1, [subTotal]);
@@ -112,7 +112,7 @@ export default function CartPage() {
           <section className="grow w-full space-y-6 lg:w-2/3">
             {cart.map((item) => {
               const quantity = Number(item.quantity || 1);
-              const unitPrice = Number(item.priceNew || 0);
+              const unitPrice = Number((item.priceNew && item.priceNew > 0) ? item.priceNew : item.price || 0);
 
               return (
                 <div

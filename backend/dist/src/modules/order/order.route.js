@@ -41,4 +41,5 @@ const router = (0, express_1.Router)();
 router.get("/list", orderController.list);
 router.get("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), orderController.edit);
 router.patch("/edit/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), orderController.editPatch);
+router.post("/", orderController.create);
 exports.default = router;

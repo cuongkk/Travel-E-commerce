@@ -298,9 +298,23 @@ export default function ProfilePage() {
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-28 md:py-32">
-      <div className="mb-8 space-y-2">
-        <h1 className="text-3xl font-extrabold text-on-surface font-headline">Quản lý thông tin cá nhân</h1>
-        <p className="text-on-surface-variant">Cập nhật hồ sơ, thanh toán bằng số dư tài khoản và đổi mật khẩu.</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-extrabold text-on-surface font-headline">Quản lý thông tin cá nhân</h1>
+          <p className="text-on-surface-variant">Cập nhật hồ sơ, thanh toán bằng số dư tài khoản và đổi mật khẩu.</p>
+        </div>
+        <Link href="/profile/wishlist" className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 text-red-500 hover:bg-red-100 rounded-full font-semibold transition-colors">
+          <span>Wishlist</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </Link>
+      </div>
+      
+      {/* Mobile Wishlist Button */}
+      <div className="mb-6 md:hidden">
+        <Link href="/profile/wishlist" className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-red-50 text-red-500 hover:bg-red-100 rounded-xl font-bold transition-colors">
+          <span>Danh sách yêu thích</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </Link>
       </div>
 
       <div className="rounded-2xl border border-outline-variant/20 bg-surface p-5 md:p-8 shadow-sm mb-8">

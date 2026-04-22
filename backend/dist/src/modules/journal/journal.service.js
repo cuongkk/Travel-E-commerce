@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPatch = exports.edit = exports.createPost = exports.list = void 0;
+exports.editPatch = exports.hardDeleteItem = exports.restoreItem = exports.getTrash = exports.deleteItem = exports.edit = exports.createPost = exports.list = void 0;
 const journal_model_1 = __importDefault(require("./journal.model"));
 const normalizeStatus = (value) => {
     return String(value || "active") === "inactive" ? "inactive" : "active";
@@ -15,7 +15,7 @@ const normalizeTrendingScore = (value) => {
     return parsed;
 };
 const list = async (_req) => {
-    const journalList = await journal_model_1.default.find({}).sort({ createdAt: -1 });
+    const journalList = await journal_model_1.default.find({ deleted: false }).sort({ createdAt: -1 });
     return { journalList };
 };
 exports.list = list;
@@ -49,7 +49,7 @@ const createPost = async (req) => {
 exports.createPost = createPost;
 const edit = async (req) => {
     const { id } = req.params;
-    const journalDetail = await journal_model_1.default.findById(id);
+    const journalDetail = await journal_model_1.default.findOne({ _id: id, deleted: false });
     if (!journalDetail) {
         return {
             code: "error",
@@ -59,11 +59,43 @@ const edit = async (req) => {
     return { journalDetail };
 };
 exports.edit = edit;
+const deleteItem = async (req) => {
+    const { id } = req.params;
+    const deletedItem = await journal_model_1.default.findByIdAndUpdate(id, { deleted: true, deletedAt: new Date() }, { new: true });
+    if (!deletedItem) {
+        throw new Error("Journal không tồn tại!");
+    }
+    return { deletedJournal: deletedItem };
+};
+exports.deleteItem = deleteItem;
+const getTrash = async (_req) => {
+    const journalList = await journal_model_1.default.find({ deleted: true }).sort({ deletedAt: -1 });
+    return { journalList };
+};
+exports.getTrash = getTrash;
+const restoreItem = async (req) => {
+    const { id } = req.params;
+    const restoredItem = await journal_model_1.default.findByIdAndUpdate(id, { deleted: false, deletedAt: null }, { new: true });
+    if (!restoredItem) {
+        throw new Error("Journal không tồn tại trong thùng rác!");
+    }
+    return { restoredJournal: restoredItem };
+};
+exports.restoreItem = restoreItem;
+const hardDeleteItem = async (req) => {
+    const { id } = req.params;
+    const deletedItem = await journal_model_1.default.findByIdAndDelete(id);
+    if (!deletedItem) {
+        throw new Error("Journal không tồn tại!");
+    }
+    return { deletedJournal: deletedItem };
+};
+exports.hardDeleteItem = hardDeleteItem;
 const editPatch = async (req) => {
     var _a, _b, _c, _d, _e, _f, _g, _h, _j;
     const { id } = req.params;
     const anyReq = req;
-    const journalDetail = await journal_model_1.default.findById(id);
+    const journalDetail = await journal_model_1.default.findOne({ _id: id, deleted: false });
     if (!journalDetail) {
         return {
             code: "error",

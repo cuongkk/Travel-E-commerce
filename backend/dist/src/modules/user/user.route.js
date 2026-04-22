@@ -35,6 +35,9 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const userController = __importStar(require("./user.controller"));
+const validate_middleware_1 = require("../../middlewares/validate.middleware");
+const common_validation_1 = require("../../validates/common.validation");
 const router = (0, express_1.Router)();
 router.get("/list", userController.list);
+router.patch("/status/:id", (0, validate_middleware_1.validate)({ params: common_validation_1.objectIdParamSchema }), userController.patchStatus);
 exports.default = router;

@@ -3,10 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPatch = exports.edit = exports.list = void 0;
+exports.create = exports.editPatch = exports.edit = exports.list = void 0;
 const moment_1 = __importDefault(require("moment"));
 const order_model_1 = __importDefault(require("./order.model"));
 const city_model_1 = __importDefault(require("../city/city.model"));
+const account_model_1 = __importDefault(require("../auth/account.model"));
+const voucher_model_1 = __importDefault(require("../voucher/voucher.model"));
+const cart_service_1 = require("../cart/cart.service");
+const error_middleware_1 = require("../../middlewares/error.middleware");
 const variable_config_1 = require("../../configs/variable.config");
 const normalizeOrderItems = (items = []) => {
     return items.map((item) => {
@@ -81,9 +85,72 @@ const editPatch = async (req) => {
     }
     catch (error) {
         return {
-            code: "error",
+            code: "success",
             message: "Đơn hàng không tồn tại!",
         };
     }
 };
 exports.editPatch = editPatch;
+const create = async (req) => {
+    var _a;
+    const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a.id;
+    if (!userId)
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để thực hiện thao tác này.");
+    const account = await account_model_1.default.findById(userId).select("cart");
+    if (!account)
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại!");
+    const cartInput = account.cart || [];
+    if (cartInput.length === 0)
+        throw new error_middleware_1.HttpError(400, "Giỏ hàng trống!");
+    const cartDetails = await (0, cart_service_1.buildCartDetails)(cartInput);
+    const subTotal = cartDetails.reduce((sum, item) => sum + ((item.priceNew && item.priceNew > 0) ? item.priceNew : item.price || 0) * item.quantity, 0);
+    const { fullName, phone, email, note, paymentMethod, voucherCode } = req.body;
+    let discount = 0;
+    let finalVoucherCode = undefined;
+    if (voucherCode) {
+        const voucher = await voucher_model_1.default.findOne({ code: String(voucherCode).toUpperCase(), deleted: false, status: "active" });
+        if (voucher) {
+            const isNotExpired = voucher.expiresAt >= new Date();
+            const hasStock = voucher.maxUsage === undefined ||
+                voucher.maxUsage === null ||
+                (voucher.usedCount !== undefined && voucher.usedCount < voucher.maxUsage);
+            const isMinValid = voucher.minOrderValue === undefined || voucher.minOrderValue === 0 || subTotal >= voucher.minOrderValue;
+            if (isNotExpired && hasStock && isMinValid) {
+                if (voucher.discountType === "percent") {
+                    discount = (subTotal * voucher.discountValue) / 100;
+                }
+                else {
+                    discount = voucher.discountValue;
+                }
+                if (discount > subTotal)
+                    discount = subTotal;
+                finalVoucherCode = voucher.code;
+                // Increase usedCount immediately
+                await voucher_model_1.default.updateOne({ _id: voucher._id }, { $inc: { usedCount: 1 } });
+            }
+        }
+    }
+    const total = subTotal - discount;
+    const orderData = {
+        code: `ORD-${Date.now()}`,
+        accountId: userId,
+        fullName,
+        phone,
+        email,
+        note,
+        items: cartDetails,
+        subTotal,
+        discount,
+        voucherCode: finalVoucherCode,
+        total,
+        paymentMethod,
+        paymentStatus: "unpaid",
+        status: "initial",
+        deleted: false,
+    };
+    const newOrder = await order_model_1.default.create(orderData);
+    // Xóa giỏ hàng sau khi tạo đơn
+    await account_model_1.default.updateOne({ _id: userId }, { $set: { cart: [] } });
+    return newOrder;
+};
+exports.create = create;

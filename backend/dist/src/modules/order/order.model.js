@@ -36,12 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const schema = new mongoose_1.Schema({
     code: { type: String },
+    accountId: { type: String, ref: "AccountAdmin" },
     fullName: { type: String },
     phone: { type: String },
     note: { type: String },
     items: { type: [mongoose_1.Schema.Types.Mixed], default: [] },
     subTotal: { type: Number },
     discount: { type: Number },
+    voucherCode: { type: String },
     total: { type: Number },
     paymentMethod: { type: String },
     paymentStatus: { type: String },

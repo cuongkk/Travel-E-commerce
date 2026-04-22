@@ -17,8 +17,14 @@ const user_route_1 = __importDefault(require("../modules/user/user.route"));
 const setting_route_1 = __importDefault(require("../modules/setting/setting.route"));
 const gear_route_1 = __importDefault(require("../modules/gear/gear.route"));
 const journal_route_1 = __importDefault(require("../modules/journal/journal.route"));
+const payment_route_1 = __importDefault(require("../modules/payment/payment.route"));
+const voucher_admin_route_1 = __importDefault(require("../modules/voucher/voucher.admin.route"));
+const voucher_client_route_1 = __importDefault(require("../modules/voucher/voucher.client.route"));
+const review_admin_route_1 = __importDefault(require("../modules/review/review.admin.route"));
+const review_client_route_1 = __importDefault(require("../modules/review/review.client.route"));
 const auth_middleware_1 = require("../middlewares/auth.middleware");
 const role_middleware_1 = require("../middlewares/role.middleware");
+const ai_route_1 = __importDefault(require("../modules/ai/ai.route"));
 const router = (0, express_1.Router)();
 router.use("/auth", auth_route_1.default);
 // Nhóm route dành cho ADMIN (cần token + role admin)
@@ -30,11 +36,17 @@ router.use("/user", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, us
 router.use("/tour", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, tour_route_1.default);
 router.use("/gear", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, gear_route_1.default);
 router.use("/journal", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, journal_route_1.default);
+router.use("/voucher", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, voucher_admin_route_1.default);
+router.use("/review", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, review_admin_route_1.default);
 router.use("/admin/dashboard", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, dashboard_route_1.dashboardAdminRouter);
+router.use("/contact", auth_middleware_1.verifyToken, role_middleware_1.isAdmin, contact_route_1.default);
+router.use("/ai", ai_route_1.default); // The verification is inside the router itself
 // Nhóm route dành cho CLIENT (có thể yêu cầu đăng nhập tuỳ chức năng)
 // router.use("/search", searchRouter);
 router.use("/dashboard", dashboard_route_1.dashboardPublicRouter);
 router.use("/cart", auth_middleware_1.verifyToken, role_middleware_1.isClient, cart_route_1.default);
 router.use("/order", auth_middleware_1.verifyToken, role_middleware_1.isClient, order_route_1.default);
-router.use("/contact", contact_route_1.default);
+router.use("/voucher-client", auth_middleware_1.verifyToken, role_middleware_1.isClient, voucher_client_route_1.default);
+router.use("/review-client", review_client_route_1.default);
+router.use("/payment", payment_route_1.default);
 exports.default = router;

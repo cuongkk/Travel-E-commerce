@@ -32,7 +32,7 @@ export const Header = () => {
   return (
     <>
       {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-[70px] bg-white border-b border-gray-200 flex items-center justify-between px-[30px] z-10">
+      <header className="fixed top-0 left-0 w-full h-[70px] bg-white border-b border-gray-200 flex items-center justify-between px-[30px] z-[50]">
         {/* Mobile toggle button */}
         <button className="block lg:hidden bg-white p-2 rounded-md shadow-md" onClick={() => setIsOpen((prev) => !prev)}>
           <FaBars />

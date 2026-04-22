@@ -40,8 +40,8 @@ export const Sider = ({ isOpen, setIsOpen }: SiderProps) => {
 
       {/* Sidebar */}
       <nav
-        className={`mt-[70px] not-first:z-30 w-[240px] h-[calc(100vh-70px)] bg-white border-r border-gray-200 overflow-y-auto transform transition-transform duration-300
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static lg:z-10`}
+        className={`fixed left-0 top-0 mt-[70px] z-[40] w-[240px] h-[calc(100vh-70px)] bg-white border-r border-gray-200 overflow-y-auto transform transition-transform duration-300
+        ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:z-20`}
       >
         {/* Menu */}
         <ul className="flex flex-col items-start px-[12px] py-[10px] gap-2">

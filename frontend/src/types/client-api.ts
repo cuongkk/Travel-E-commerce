@@ -69,6 +69,7 @@ export type CartItem = {
   departureDate?: string;
   locationFrom?: string;
   locationFromName?: string;
+  price?: number;
   priceNew?: number;
   stock?: number;
   priceNewAdult?: number;

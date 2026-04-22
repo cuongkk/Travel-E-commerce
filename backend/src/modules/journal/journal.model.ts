@@ -10,6 +10,9 @@ export interface IJournal extends Document {
   avatar: string;
   trendingScore: number;
   status: "active" | "inactive";
+  deleted: boolean;
+  deletedBy?: string;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +28,9 @@ const schema = new Schema<IJournal>(
     avatar: { type: String, required: true },
     trendingScore: { type: Number, default: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    deleted: { type: Boolean, default: false },
+    deletedBy: { type: String },
+    deletedAt: { type: Date },
   },
   {
     timestamps: true,

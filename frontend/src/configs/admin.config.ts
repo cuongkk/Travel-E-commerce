@@ -24,8 +24,12 @@ export const siderList = [
     path: "/admin/order",
   },
   {
-    name: "Quản lý khách hàng",
-    path: "/admin/customer",
+    name: "Quản lý mã giảm giá",
+    path: "/admin/voucher",
+  },
+  {
+    name: "Quản lý người dùng",
+    path: "/admin/user",
   },
 ];
 

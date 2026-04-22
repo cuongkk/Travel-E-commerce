@@ -11,4 +11,6 @@ router.get("/edit/:id", validate({ params: objectIdParamSchema }), orderControll
 
 router.patch("/edit/:id", validate({ params: objectIdParamSchema }), orderController.editPatch);
 
+router.post("/", orderController.create);
+
 export default router;

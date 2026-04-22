@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshPost = exports.walletPayPost = exports.walletBalance = exports.uploadAvatarPost = exports.changePasswordPatch = exports.updateMePatch = exports.getMe = exports.logout = exports.resetPasswordPost = exports.resetPassword = exports.otpPasswordPost = exports.otpPassword = exports.forgotPasswordPost = exports.forgotPassword = exports.registerPost = exports.register = exports.loginPost = exports.login = void 0;
+exports.refreshPost = exports.walletPayPost = exports.walletBalance = exports.uploadAvatarPost = exports.changePasswordPatch = exports.updateMePatch = exports.getMe = exports.toggleWishlist = exports.getWishlist = exports.logout = exports.resetPasswordPost = exports.resetPassword = exports.otpPasswordPost = exports.otpPassword = exports.forgotPasswordPost = exports.forgotPassword = exports.registerPost = exports.register = exports.loginPost = exports.login = void 0;
 const authService = __importStar(require("./auth.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
@@ -102,6 +102,14 @@ const logout = (req, res) => {
     (0, response_1.sendSuccess)(res, "Đăng xuất thành công");
 };
 exports.logout = logout;
+exports.getWishlist = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.getWishlist(req);
+    (0, response_1.sendSuccess)(res, "Lấy danh sách yêu thích thành công", data);
+});
+exports.toggleWishlist = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await authService.toggleWishlist(req);
+    (0, response_1.sendSuccess)(res, data.action === "added" ? "Đã thêm vào danh sách yêu thích" : "Đã gỡ khỏi danh sách yêu thích", data);
+});
 exports.getMe = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await authService.getMe(req);
     (0, response_1.sendSuccess)(res, "Lấy thông tin người dùng thành công", data);

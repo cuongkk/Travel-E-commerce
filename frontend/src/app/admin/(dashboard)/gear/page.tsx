@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaPen } from "react-icons/fa6";
+import { FaPen, FaTrash } from "react-icons/fa6";
 import { useAuth } from "@/hooks/useAuth";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 
@@ -129,6 +129,31 @@ export default function GearAdminPage() {
     await fetchData();
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Bạn có chắc muốn xóa vĩnh viễn gear "${name}" không? Hành động này không thể hoàn tác.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/gear/delete/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (!response.ok || data?.success !== true) {
+        throw new Error(data?.message || "Xóa gear thất bại");
+      }
+
+      setReloadToast("success", "Đã xóa gear thành công");
+      showReloadToastIfAny();
+      await fetchData();
+    } catch (error: any) {
+      setReloadToast("error", error.message || "Xóa thất bại");
+      showReloadToastIfAny();
+    }
+  };
+
   const formatMoney = (value: number) => `${Math.max(0, value).toLocaleString("vi-VN")}đ`;
 
   return (
@@ -151,6 +176,10 @@ export default function GearAdminPage() {
 
           <button type="button" onClick={() => setShowCreate((prev) => !prev)} className="h-10 px-4 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700">
             {showCreate ? "Đóng form" : "Thêm mới"}
+          </button>
+          
+          <button type="button" onClick={() => router.push('/admin/gear/trash')} className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+            <FaTrash /> Thùng rác
           </button>
         </div>
 
@@ -260,9 +289,14 @@ export default function GearAdminPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <button type="button" onClick={() => router.push(`/admin/gear/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200">
-                        <FaPen className="mx-auto" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button type="button" onClick={() => router.push(`/admin/gear/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center">
+                          <FaPen />
+                        </button>
+                        <button type="button" onClick={() => handleDelete(item.id, item.name)} className="w-8 h-8 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center">
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

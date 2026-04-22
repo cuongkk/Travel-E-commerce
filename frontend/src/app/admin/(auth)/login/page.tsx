@@ -14,7 +14,9 @@ type LoginFormData = {
   rememberPassword: boolean;
 };
 
-export default function LoginPage() {
+import { Suspense } from "react";
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isLogin, isAuthLoaded } = useAuth();
@@ -164,5 +166,13 @@ export default function LoginPage() {
         </Link>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="text-center p-10">Đang tải...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

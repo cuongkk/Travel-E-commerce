@@ -23,6 +23,26 @@ export const edit = asyncHandler(async (req: Request, res: Response): Promise<vo
 
 export const editPatch = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const result = await gearService.editPatch(req);
-  if (result.code === "error") throw new HttpError(400, result.message);
-  sendSuccess(res, result.message, result);
+  if (result.code === "error") throw new HttpError(400, result.message || "Đã có lỗi xảy ra");
+  sendSuccess(res, result.message || "Cập nhật gear thành công!", result);
+});
+
+export const deleteItem = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await gearService.deleteItem(req);
+  sendSuccess(res, "Đã đưa gear vào thùng rác!", data);
+});
+
+export const getTrash = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await gearService.getTrash(req);
+  sendSuccess(res, "Lấy danh sách thùng rác thành công!", data);
+});
+
+export const restoreItem = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await gearService.restoreItem(req);
+  sendSuccess(res, "Khôi phục gear thành công!", data);
+});
+
+export const hardDeleteItem = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await gearService.hardDeleteItem(req);
+  sendSuccess(res, "Xóa vĩnh viễn gear thành công!", data);
 });

@@ -43,6 +43,11 @@ const schema = new mongoose_1.Schema({
     image: { type: String, required: true },
     badge: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
+    deleted: { type: Boolean, default: false },
+    deletedBy: { type: String },
+    deletedAt: { type: Date },
 }, {
     timestamps: true,
 });

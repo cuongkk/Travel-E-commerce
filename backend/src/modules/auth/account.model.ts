@@ -23,6 +23,7 @@ export interface IAccountAdmin extends Document {
     locationFrom?: string;
     departureDate?: Date;
   }[];
+  wishlist?: string[];
   walletBalance?: number;
 }
 
@@ -52,6 +53,7 @@ const schema = new Schema<IAccountAdmin>(
     updatedBy: { type: String },
     slug: { type: String, unique: true },
     cart: { type: [cartItemSchema], default: [] },
+    wishlist: { type: [String], default: [] },
     walletBalance: { type: Number, default: 0, min: 0 },
     deleted: { type: Boolean, default: false },
     deletedBy: { type: String },

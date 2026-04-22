@@ -58,6 +58,10 @@ export const paymentMethodList = [
     label: "ZaloPay",
     value: "zalopay",
   },
+  {
+    label: "MoMo",
+    value: "momo",
+  },
 ];
 
 export const paymentStatusList = [

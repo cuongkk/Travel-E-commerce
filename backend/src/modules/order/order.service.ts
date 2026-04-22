@@ -2,6 +2,11 @@ import type { Request } from "express";
 import moment from "moment";
 import Order from "./order.model";
 import City from "../city/city.model";
+import AccountAdmin from "../auth/account.model";
+import Voucher from "../voucher/voucher.model";
+import { buildCartDetails } from "../cart/cart.service";
+import type { AccountRequest } from "../../interfaces/request.interface";
+import { HttpError } from "../../middlewares/error.middleware";
 import { paymentMethodList, paymentStatusList, statusList } from "../../configs/variable.config";
 
 const normalizeOrderItems = (items: any[] = []): any[] => {
@@ -92,8 +97,80 @@ export const editPatch = async (req: Request): Promise<{ code: string; message: 
     };
   } catch (error) {
     return {
-      code: "error",
+      code: "success",
       message: "Đơn hàng không tồn tại!",
     };
   }
+};
+
+export const create = async (req: Request): Promise<any> => {
+  const userId = (req as AccountRequest).user?.id;
+  if (!userId) throw new HttpError(401, "Bạn cần đăng nhập để thực hiện thao tác này.");
+
+  const account = await AccountAdmin.findById(userId).select("cart");
+  if (!account) throw new HttpError(404, "Tài khoản không tồn tại!");
+
+  const cartInput = (account as any).cart || [];
+  if (cartInput.length === 0) throw new HttpError(400, "Giỏ hàng trống!");
+
+  const cartDetails = await buildCartDetails(cartInput);
+  const subTotal = cartDetails.reduce((sum, item) => sum + ((item.priceNew && item.priceNew > 0) ? item.priceNew : item.price || 0) * item.quantity, 0);
+  
+  const { fullName, phone, email, note, paymentMethod, voucherCode } = req.body;
+
+  let discount = 0;
+  let finalVoucherCode: string | undefined = undefined;
+
+  if (voucherCode) {
+    const voucher = await Voucher.findOne({ code: String(voucherCode).toUpperCase(), deleted: false, status: "active" });
+    if (voucher) {
+      const isNotExpired = voucher.expiresAt >= new Date();
+      const hasStock =
+        voucher.maxUsage === undefined ||
+        voucher.maxUsage === null ||
+        (voucher.usedCount !== undefined && voucher.usedCount < voucher.maxUsage);
+      const isMinValid = voucher.minOrderValue === undefined || voucher.minOrderValue === 0 || subTotal >= voucher.minOrderValue;
+
+      if (isNotExpired && hasStock && isMinValid) {
+        if (voucher.discountType === "percent") {
+          discount = (subTotal * voucher.discountValue) / 100;
+        } else {
+          discount = voucher.discountValue;
+        }
+
+        if (discount > subTotal) discount = subTotal;
+        finalVoucherCode = voucher.code;
+
+        // Increase usedCount immediately
+        await Voucher.updateOne({ _id: voucher._id }, { $inc: { usedCount: 1 } });
+      }
+    }
+  }
+
+  const total = subTotal - discount;
+
+  const orderData = {
+    code: `ORD-${Date.now()}`,
+    accountId: userId,
+    fullName,
+    phone,
+    email,
+    note,
+    items: cartDetails,
+    subTotal,
+    discount,
+    voucherCode: finalVoucherCode,
+    total,
+    paymentMethod,
+    paymentStatus: "unpaid",
+    status: "initial",
+    deleted: false,
+  };
+
+  const newOrder = await Order.create(orderData);
+
+  // Xóa giỏ hàng sau khi tạo đơn
+  await AccountAdmin.updateOne({ _id: userId }, { $set: { cart: [] } });
+
+  return newOrder;
 };

@@ -10,6 +10,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import type { PublicTour } from "@/types/client-api";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 import { addTourToCart } from "@/utils/cart-client";
+import { ReviewSection } from "@/components/features/review/ReviewSection";
 
 const formatPrice = (value: number): string => `${Math.max(0, value).toLocaleString("vi-VN")}đ`;
 
@@ -145,10 +146,10 @@ export function TourDetail({ tour }: TourDetailProps) {
                 autoplay={
                   gallery.length > 1
                     ? {
-                        delay: 4000,
-                        disableOnInteraction: false,
-                        pauseOnMouseEnter: true,
-                      }
+                      delay: 4000,
+                      disableOnInteraction: false,
+                      pauseOnMouseEnter: true,
+                    }
                     : false
                 }
               >
@@ -206,6 +207,9 @@ export function TourDetail({ tour }: TourDetailProps) {
               <div className="bg-surface-container-low rounded-2xl p-8 text-on-surface-variant">Hiện chưa có lịch trình chi tiết cho tour này.</div>
             )}
           </div>
+
+          {/* Evaluate & Review Section */}
+          <ReviewSection itemId={tour.id as string} itemType="tour" />
         </section>
 
         <aside className="w-full lg:w-100">

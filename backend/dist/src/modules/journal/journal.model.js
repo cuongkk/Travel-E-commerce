@@ -44,6 +44,9 @@ const schema = new mongoose_1.Schema({
     avatar: { type: String, required: true },
     trendingScore: { type: Number, default: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    deleted: { type: Boolean, default: false },
+    deletedBy: { type: String },
+    deletedAt: { type: Date },
 }, {
     timestamps: true,
 });

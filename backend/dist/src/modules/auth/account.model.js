@@ -55,6 +55,7 @@ const schema = new mongoose_1.Schema({
     updatedBy: { type: String },
     slug: { type: String, unique: true },
     cart: { type: [cartItemSchema], default: [] },
+    wishlist: { type: [String], default: [] },
     walletBalance: { type: Number, default: 0, min: 0 },
     deleted: { type: Boolean, default: false },
     deletedBy: { type: String },

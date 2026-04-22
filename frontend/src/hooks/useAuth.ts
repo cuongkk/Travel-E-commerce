@@ -25,13 +25,13 @@ export const useAuth = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const shouldFetch = pathname.startsWith("/admin");
+  const shouldFetch = true;
 
   const { data, error, isLoading, mutate } = useSWR(shouldFetch ? `${process.env.NEXT_PUBLIC_API_URL}/auth/me` : null, fetcher, {
     revalidateOnFocus: false,
   });
 
-  const isLogin = data?.success === true;
+  const isLogin = data?.success === true && data.data?.account?.role === "admin";
 
   const logout = async () => {
     try {
@@ -62,6 +62,7 @@ export const useAuth = () => {
     isLogin,
     isAuthLoaded: !isLoading,
     adminInfo: data?.data?.account ?? null,
+    userInfo: data?.data?.account ?? null,
     error,
     logout,
     mutate,

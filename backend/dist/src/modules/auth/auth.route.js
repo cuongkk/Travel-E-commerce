@@ -61,6 +61,8 @@ router.post("/avatar/upload", auth_middleware_1.verifyToken, upload.single("avat
 router.patch("/change-password", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.changePasswordBodySchema }), authController.changePasswordPatch);
 router.get("/wallet/balance", auth_middleware_1.verifyToken, authController.walletBalance);
 router.post("/wallet/pay", auth_middleware_1.verifyToken, (0, validate_middleware_1.validate)({ body: auth_validation_1.walletPayBodySchema }), authController.walletPayPost);
+router.get("/wishlist", auth_middleware_1.verifyToken, authController.getWishlist);
+router.post("/wishlist/toggle", auth_middleware_1.verifyToken, authController.toggleWishlist);
 router.get("/logout", authController.logout);
 router.post("/refresh", (0, validate_middleware_1.validate)({ body: auth_validation_1.refreshBodySchema }), authController.refreshPost);
 exports.default = router;

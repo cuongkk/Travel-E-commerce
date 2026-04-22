@@ -33,11 +33,15 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.list = void 0;
+exports.patchStatus = exports.list = void 0;
 const userService = __importStar(require("./user.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
 exports.list = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const data = await userService.list(req);
     (0, response_1.sendSuccess)(res, "Lấy danh sách người dùng thành công!", data);
+});
+exports.patchStatus = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await userService.patchStatus(req);
+    (0, response_1.sendSuccess)(res, "Cập nhật trạng thái thành công!", data);
 });

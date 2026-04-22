@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import slugify from "slugify";
 import AccountAdmin from "./account.model";
 import ForgotPassword from "./forgot-password.model";
+import Tour from "../tour/tour.model";
 import { generateRandomNumber } from "../../utils/generate.helper";
 import { sendMail } from "../../utils/mail.helper";
 import { Request } from "express";
@@ -20,6 +21,7 @@ const serializeAccount = (accountInput: any) => {
     role: account?.role || "client",
     status: account?.status || "",
     walletBalance: Number(account?.walletBalance || 0),
+    wishlist: account?.wishlist || [],
     createdAt: account?.createdAt,
     updatedAt: account?.updatedAt,
   };
@@ -379,6 +381,59 @@ export const walletPay = async (req: Request) => {
     balance: nextBalance,
     transactionCode: `PAY-${Date.now()}`,
   };
+};
+
+export const getWishlist = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để xem danh sách yêu thích");
+  }
+
+  const account = await AccountAdmin.findById(accountFromMiddleware._id);
+  if (!account) throw new HttpError(404, "Tài khoản không tồn tại");
+
+  const wishlistIds = account.wishlist || [];
+  
+  const tours = await Tour.find({
+    _id: { $in: wishlistIds },
+    deleted: false,
+    status: "active"
+  });
+
+  return { wishlist: tours };
+};
+
+export const toggleWishlist = async (req: Request) => {
+  const accountFromMiddleware = (req as any).account;
+  if (!accountFromMiddleware?._id) {
+    throw new HttpError(401, "Bạn cần đăng nhập để thực hiện tác vụ này");
+  }
+
+  const { tourId } = req.body as { tourId: string };
+  if (!tourId) throw new HttpError(400, "Thiếu id của Tour");
+
+  const tourInfo = await Tour.findOne({ _id: tourId, deleted: false });
+  if (!tourInfo) throw new HttpError(404, "Tour không tồn tại");
+
+  const account = await AccountAdmin.findById(accountFromMiddleware._id);
+  if (!account) throw new HttpError(404, "Tài khoản không tồn tại");
+
+  let currentWishlist = account.wishlist || [];
+  let action = "added";
+
+  if (currentWishlist.includes(tourId)) {
+    currentWishlist = currentWishlist.filter(id => id !== tourId);
+    action = "removed";
+  } else {
+    currentWishlist.push(tourId);
+  }
+
+  await AccountAdmin.updateOne(
+    { _id: account._id },
+    { $set: { wishlist: currentWishlist } }
+  );
+
+  return { action, tourId };
 };
 
 export const refresh = async (req: Request) => {

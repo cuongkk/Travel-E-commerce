@@ -3,11 +3,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refresh = exports.walletPay = exports.getWalletBalance = exports.uploadMyAvatar = exports.changePassword = exports.updateMe = exports.getMe = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.register = exports.login = void 0;
+exports.refresh = exports.toggleWishlist = exports.getWishlist = exports.walletPay = exports.getWalletBalance = exports.uploadMyAvatar = exports.changePassword = exports.updateMe = exports.getMe = exports.resetPassword = exports.verifyOtp = exports.forgotPassword = exports.register = exports.login = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const slugify_1 = __importDefault(require("slugify"));
 const account_model_1 = __importDefault(require("./account.model"));
 const forgot_password_model_1 = __importDefault(require("./forgot-password.model"));
+const tour_model_1 = __importDefault(require("../tour/tour.model"));
 const generate_helper_1 = require("../../utils/generate.helper");
 const mail_helper_1 = require("../../utils/mail.helper");
 const auth_tokens_1 = require("./auth.tokens");
@@ -24,6 +25,7 @@ const serializeAccount = (accountInput) => {
         role: (account === null || account === void 0 ? void 0 : account.role) || "client",
         status: (account === null || account === void 0 ? void 0 : account.status) || "",
         walletBalance: Number((account === null || account === void 0 ? void 0 : account.walletBalance) || 0),
+        wishlist: (account === null || account === void 0 ? void 0 : account.wishlist) || [],
         createdAt: account === null || account === void 0 ? void 0 : account.createdAt,
         updatedAt: account === null || account === void 0 ? void 0 : account.updatedAt,
     };
@@ -297,6 +299,50 @@ const walletPay = async (req) => {
     };
 };
 exports.walletPay = walletPay;
+const getWishlist = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để xem danh sách yêu thích");
+    }
+    const account = await account_model_1.default.findById(accountFromMiddleware._id);
+    if (!account)
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    const wishlistIds = account.wishlist || [];
+    const tours = await tour_model_1.default.find({
+        _id: { $in: wishlistIds },
+        deleted: false,
+        status: "active"
+    });
+    return { wishlist: tours };
+};
+exports.getWishlist = getWishlist;
+const toggleWishlist = async (req) => {
+    const accountFromMiddleware = req.account;
+    if (!(accountFromMiddleware === null || accountFromMiddleware === void 0 ? void 0 : accountFromMiddleware._id)) {
+        throw new error_middleware_1.HttpError(401, "Bạn cần đăng nhập để thực hiện tác vụ này");
+    }
+    const { tourId } = req.body;
+    if (!tourId)
+        throw new error_middleware_1.HttpError(400, "Thiếu id của Tour");
+    const tourInfo = await tour_model_1.default.findOne({ _id: tourId, deleted: false });
+    if (!tourInfo)
+        throw new error_middleware_1.HttpError(404, "Tour không tồn tại");
+    const account = await account_model_1.default.findById(accountFromMiddleware._id);
+    if (!account)
+        throw new error_middleware_1.HttpError(404, "Tài khoản không tồn tại");
+    let currentWishlist = account.wishlist || [];
+    let action = "added";
+    if (currentWishlist.includes(tourId)) {
+        currentWishlist = currentWishlist.filter(id => id !== tourId);
+        action = "removed";
+    }
+    else {
+        currentWishlist.push(tourId);
+    }
+    await account_model_1.default.updateOne({ _id: account._id }, { $set: { wishlist: currentWishlist } });
+    return { action, tourId };
+};
+exports.toggleWishlist = toggleWishlist;
 const refresh = async (req) => {
     const { refreshToken } = req.body;
     const decoded = (0, auth_tokens_1.verifyRefreshToken)(refreshToken);

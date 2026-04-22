@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPatch = exports.edit = exports.createPost = exports.list = void 0;
+exports.hardDeleteItem = exports.restoreItem = exports.getTrash = exports.deleteItem = exports.editPatch = exports.edit = exports.createPost = exports.list = void 0;
 const gearService = __importStar(require("./gear.service"));
 const async_handler_1 = require("../../utils/async-handler");
 const response_1 = require("../../utils/response");
@@ -57,6 +57,22 @@ exports.edit = (0, async_handler_1.asyncHandler)(async (req, res) => {
 exports.editPatch = (0, async_handler_1.asyncHandler)(async (req, res) => {
     const result = await gearService.editPatch(req);
     if (result.code === "error")
-        throw new error_middleware_1.HttpError(400, result.message);
-    (0, response_1.sendSuccess)(res, result.message, result);
+        throw new error_middleware_1.HttpError(400, result.message || "Đã có lỗi xảy ra");
+    (0, response_1.sendSuccess)(res, result.message || "Cập nhật gear thành công!", result);
+});
+exports.deleteItem = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await gearService.deleteItem(req);
+    (0, response_1.sendSuccess)(res, "Đã đưa gear vào thùng rác!", data);
+});
+exports.getTrash = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await gearService.getTrash(req);
+    (0, response_1.sendSuccess)(res, "Lấy danh sách thùng rác thành công!", data);
+});
+exports.restoreItem = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await gearService.restoreItem(req);
+    (0, response_1.sendSuccess)(res, "Khôi phục gear thành công!", data);
+});
+exports.hardDeleteItem = (0, async_handler_1.asyncHandler)(async (req, res) => {
+    const data = await gearService.hardDeleteItem(req);
+    (0, response_1.sendSuccess)(res, "Xóa vĩnh viễn gear thành công!", data);
 });

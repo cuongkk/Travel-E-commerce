@@ -48,6 +48,12 @@ export default function LoginPage() {
         return;
       }
 
+      if (data.data?.user?.role !== "client") {
+        setReloadToast("error", "Tài khoản này không có quyền truy cập vào giao diện khách hàng.");
+        showReloadToastIfAny();
+        return;
+      }
+
       setReloadToast("success", data?.message || "Đăng nhập thành công.");
       showReloadToastIfAny();
 

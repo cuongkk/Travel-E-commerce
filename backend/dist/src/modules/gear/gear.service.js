@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editPatch = exports.edit = exports.createPost = exports.list = void 0;
+exports.editPatch = exports.hardDeleteItem = exports.restoreItem = exports.getTrash = exports.deleteItem = exports.edit = exports.createPost = exports.list = void 0;
 const gear_model_1 = __importDefault(require("./gear.model"));
 const normalizeStatus = (value) => {
     return String(value || "active") === "inactive" ? "inactive" : "active";
@@ -15,7 +15,7 @@ const normalizePrice = (value) => {
     return parsed;
 };
 const list = async (_req) => {
-    const gearList = await gear_model_1.default.find({}).sort({ createdAt: -1 });
+    const gearList = await gear_model_1.default.find({ deleted: false }).sort({ createdAt: -1 });
     return { gearList };
 };
 exports.list = list;
@@ -48,7 +48,7 @@ const createPost = async (req) => {
 exports.createPost = createPost;
 const edit = async (req) => {
     const { id } = req.params;
-    const gearDetail = await gear_model_1.default.findById(id);
+    const gearDetail = await gear_model_1.default.findOne({ _id: id, deleted: false });
     if (!gearDetail) {
         return {
             code: "error",
@@ -58,11 +58,43 @@ const edit = async (req) => {
     return { gearDetail };
 };
 exports.edit = edit;
+const deleteItem = async (req) => {
+    const { id } = req.params;
+    const deletedItem = await gear_model_1.default.findByIdAndUpdate(id, { deleted: true, deletedAt: new Date() }, { new: true });
+    if (!deletedItem) {
+        throw new Error("Gear không tồn tại!");
+    }
+    return { deletedGear: deletedItem };
+};
+exports.deleteItem = deleteItem;
+const getTrash = async (_req) => {
+    const gearList = await gear_model_1.default.find({ deleted: true }).sort({ deletedAt: -1 });
+    return { gearList };
+};
+exports.getTrash = getTrash;
+const restoreItem = async (req) => {
+    const { id } = req.params;
+    const restoredItem = await gear_model_1.default.findByIdAndUpdate(id, { deleted: false, deletedAt: null }, { new: true });
+    if (!restoredItem) {
+        throw new Error("Gear không tồn tại trong thùng rác!");
+    }
+    return { restoredGear: restoredItem };
+};
+exports.restoreItem = restoreItem;
+const hardDeleteItem = async (req) => {
+    const { id } = req.params;
+    const deletedItem = await gear_model_1.default.findByIdAndDelete(id);
+    if (!deletedItem) {
+        throw new Error("Gear không tồn tại!");
+    }
+    return { deletedGear: deletedItem };
+};
+exports.hardDeleteItem = hardDeleteItem;
 const editPatch = async (req) => {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     const { id } = req.params;
     const anyReq = req;
-    const gearDetail = await gear_model_1.default.findById(id);
+    const gearDetail = await gear_model_1.default.findOne({ _id: id, deleted: false });
     if (!gearDetail) {
         return {
             code: "error",

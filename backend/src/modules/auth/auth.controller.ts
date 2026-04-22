@@ -80,6 +80,16 @@ export const logout = (req: Request, res: Response): void => {
   sendSuccess(res, "Đăng xuất thành công");
 };
 
+export const getWishlist = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.getWishlist(req);
+  sendSuccess(res, "Lấy danh sách yêu thích thành công", data);
+});
+
+export const toggleWishlist = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await authService.toggleWishlist(req);
+  sendSuccess(res, data.action === "added" ? "Đã thêm vào danh sách yêu thích" : "Đã gỡ khỏi danh sách yêu thích", data);
+});
+
 export const getMe = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const data = await authService.getMe(req);
   sendSuccess(res, "Lấy thông tin người dùng thành công", data);

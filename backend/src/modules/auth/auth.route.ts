@@ -41,6 +41,9 @@ router.patch("/change-password", verifyToken, validate({ body: changePasswordBod
 router.get("/wallet/balance", verifyToken, authController.walletBalance);
 router.post("/wallet/pay", verifyToken, validate({ body: walletPayBodySchema }), authController.walletPayPost);
 
+router.get("/wishlist", verifyToken, authController.getWishlist);
+router.post("/wishlist/toggle", verifyToken, authController.toggleWishlist);
+
 router.get("/logout", authController.logout);
 
 router.post("/refresh", validate({ body: refreshBodySchema }), authController.refreshPost);

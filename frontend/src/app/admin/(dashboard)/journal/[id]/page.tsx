@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
+import { Editor } from "@tinymce/tinymce-react";
 
 type JournalForm = {
   title: string;
@@ -38,6 +39,8 @@ export default function JournalEditPage() {
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
   const [form, setForm] = useState<JournalForm | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const tinyMceApiKey = process.env.NEXT_PUBLIC_TINYMCE || "";
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -100,6 +103,36 @@ export default function JournalEditPage() {
     router.push("/admin/journal");
   };
 
+  const handleGenerateAI = async () => {
+    if (!form?.title.trim() || !form?.tag.trim()) {
+      alert("Vui lòng nhập Tiêu đề và Tag trước khi dùng AI sinh nội dung!");
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type: "journal-content", title: form.title, category: form.tag }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.code !== "success") {
+        throw new Error(data.message || "Lỗi khi gọi API sinh nội dung");
+      }
+
+      if (data.data) {
+        setForm((prev) => (prev ? { ...prev, summary: data.data } : prev));
+      }
+    } catch (e: any) {
+      alert("Lỗi AI: " + e.message);
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] p-4 md:p-8 space-y-4 md:space-y-5">
       <h1 className="text-2xl font-bold text-gray-800">Chỉnh sửa journal</h1>
@@ -124,12 +157,32 @@ export default function JournalEditPage() {
             className="h-10 w-full px-3 rounded-lg border border-gray-200 text-sm"
           />
 
-          <textarea
-            value={form.summary}
-            onChange={(event) => setForm((prev) => (prev ? { ...prev, summary: event.target.value } : prev))}
-            placeholder="Tóm tắt"
-            className="min-h-24 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-          />
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">Nội dung bài viết (Tóm tắt)</label>
+              <button
+                type="button"
+                onClick={handleGenerateAI}
+                disabled={isGeneratingAI}
+                className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+              >
+                {isGeneratingAI ? "Đang sinh bài SEO..." : "✨ AI Viết bài SEO"}
+              </button>
+            </div>
+            <Editor
+              apiKey={tinyMceApiKey}
+              value={form.summary}
+              onEditorChange={(content) => setForm((prev) => (prev ? { ...prev, summary: content } : prev))}
+              init={{
+                height: 350,
+                menubar: false,
+                promotion: false,
+                plugins: ["lists", "link", "autolink", "preview", "searchreplace", "wordcount"],
+                toolbar: "undo redo | blocks | bold italic underline | bullist numlist | link | removeformat | preview",
+                content_style: "body { font-family: Lexend, sans-serif; font-size: 14px; }",
+              }}
+            />
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input

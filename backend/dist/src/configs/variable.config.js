@@ -60,6 +60,10 @@ exports.paymentMethodList = [
         label: "ZaloPay",
         value: "zalopay",
     },
+    {
+        label: "MoMo",
+        value: "momo",
+    },
 ];
 exports.paymentStatusList = [
     {

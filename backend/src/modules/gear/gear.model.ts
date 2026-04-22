@@ -9,6 +9,11 @@ export interface IGear extends Document {
   image: string;
   badge?: string;
   status: "active" | "inactive";
+  rating?: number;
+  reviewCount?: number;
+  deleted: boolean;
+  deletedBy?: string;
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +28,11 @@ const schema = new Schema<IGear>(
     image: { type: String, required: true },
     badge: { type: String },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
+    rating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
+    deleted: { type: Boolean, default: false },
+    deletedBy: { type: String },
+    deletedAt: { type: Date },
   },
   {
     timestamps: true,

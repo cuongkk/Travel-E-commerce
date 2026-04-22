@@ -7,3 +7,8 @@ export const list = asyncHandler(async (req: Request, res: Response): Promise<vo
   const data = await userService.list(req);
   sendSuccess(res, "Lấy danh sách người dùng thành công!", data);
 });
+
+export const patchStatus = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+  const data = await userService.patchStatus(req);
+  sendSuccess(res, "Cập nhật trạng thái thành công!", data);
+});
