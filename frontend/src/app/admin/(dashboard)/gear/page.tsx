@@ -49,6 +49,7 @@ export default function GearAdminPage() {
   const [form, setForm] = useState<GearForm>(defaultForm);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
     showReloadToastIfAny();
@@ -129,6 +130,39 @@ export default function GearAdminPage() {
     await fetchData();
   };
 
+  const handleGenerateAIGear = async () => {
+    if (!form.name.trim() || !form.category.trim()) {
+      setReloadToast("error", "Vui lòng nhập tên gear và danh mục trước khi dùng AI");
+      showReloadToastIfAny();
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type: "generate-description", subject: form.name, context: form.category }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data?.code !== "success") {
+        throw new Error(data?.message || "Lỗi khi gọi AI sinh mô tả");
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        description: String(data?.data || prev.description),
+      }));
+    } catch (error: any) {
+      setReloadToast("error", error.message || "Không thể sinh mô tả gear bằng AI");
+      showReloadToastIfAny();
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Bạn có chắc muốn xóa vĩnh viễn gear "${name}" không? Hành động này không thể hoàn tác.`)) {
       return;
@@ -177,14 +211,28 @@ export default function GearAdminPage() {
           <button type="button" onClick={() => setShowCreate((prev) => !prev)} className="h-10 px-4 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700">
             {showCreate ? "Đóng form" : "Thêm mới"}
           </button>
-          
-          <button type="button" onClick={() => router.push('/admin/gear/trash')} className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+
+          <button
+            type="button"
+            onClick={() => router.push("/admin/gear/trash")}
+            className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200"
+          >
             <FaTrash /> Thùng rác
           </button>
         </div>
 
         {showCreate && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-xl border border-gray-200 p-4">
+            <div className="md:col-span-2 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={handleGenerateAIGear}
+                disabled={isGeneratingAI}
+                className="h-9 px-3 rounded-lg text-sm font-semibold bg-linear-to-r from-emerald-500 to-teal-600 text-white hover:opacity-90 disabled:opacity-60"
+              >
+                {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
+              </button>
+            </div>
             <input
               value={form.name}
               onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
@@ -257,8 +305,8 @@ export default function GearAdminPage() {
         )}
 
         {!loading && !fetchFailed && (
-          <div className="overflow-auto rounded-xl border border-gray-100">
-            <table className="w-full min-w-[760px] text-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-100">
+            <table className="w-full min-w-190 text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600">Gear</th>
@@ -290,7 +338,11 @@ export default function GearAdminPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button type="button" onClick={() => router.push(`/admin/gear/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/admin/gear/${item.id}`)}
+                          className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center"
+                        >
                           <FaPen />
                         </button>
                         <button type="button" onClick={() => handleDelete(item.id, item.name)} className="w-8 h-8 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center">

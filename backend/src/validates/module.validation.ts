@@ -56,6 +56,11 @@ export const revenueChartBodySchema = Joi.object({
   arrayDay: Joi.array().items(Joi.number().integer().min(1).max(31)).min(1).required(),
 }).required();
 
+export const aiChatbotBodySchema = Joi.object({
+  message: Joi.string().trim().min(2).max(1000).required(),
+  limit: Joi.number().integer().min(1).max(5).default(3),
+}).required();
+
 export const createTourBodySchema = Joi.object({
   name: Joi.string().trim().min(1).max(255).required(),
   category: Joi.string().trim().min(1).required(),

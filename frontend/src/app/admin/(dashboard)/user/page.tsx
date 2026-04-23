@@ -88,7 +88,7 @@ export default function UserAdminPage() {
 
   const handleToggleStatus = async (user: UserItem) => {
     if (updatingId) return;
-    
+
     // Prevent banning other admins for safety without a proper superadmin hierarchy
     if (user.role === "admin") {
       setReloadToast("error", "Không thể khóa tài khoản Admin!");
@@ -97,9 +97,7 @@ export default function UserAdminPage() {
     }
 
     const newStatus = user.status === "active" ? "inactive" : "active";
-    const confirmMessage = newStatus === "inactive" 
-      ? `Bạn có chắc muốn KHÓA tài khoản ${user.email}?` 
-      : `Bạn có chắc muốn MỞ KHÓA tài khoản ${user.email}?`;
+    const confirmMessage = newStatus === "inactive" ? `Bạn có chắc muốn KHÓA tài khoản ${user.email}?` : `Bạn có chắc muốn MỞ KHÓA tài khoản ${user.email}?`;
 
     if (!window.confirm(confirmMessage)) return;
 
@@ -118,7 +116,7 @@ export default function UserAdminPage() {
       }
 
       setRows((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: newStatus } : u)));
-      setReloadToast("success", `Tài khoản ${user.email} đã được ${newStatus === 'active' ? 'mở khóa' : 'khóa'}.`);
+      setReloadToast("success", `Tài khoản ${user.email} đã được ${newStatus === "active" ? "mở khóa" : "khóa"}.`);
       showReloadToastIfAny();
     } catch (error: any) {
       setReloadToast("error", error.message || "Cập nhật thất bại");
@@ -140,12 +138,20 @@ export default function UserAdminPage() {
             placeholder="Tìm theo tên, email, sđt..."
             className="h-10 w-full md:w-72 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors"
           />
-          <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)} className="h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors">
+          <select
+            value={roleFilter}
+            onChange={(event) => setRoleFilter(event.target.value)}
+            className="h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors"
+          >
             <option value="">Tất cả vai trò</option>
             <option value="admin">Quản trị viên (Admin)</option>
             <option value="client">Khách hàng (Client)</option>
           </select>
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors">
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-10 px-3 rounded-lg border border-gray-200 text-sm outline-none focus:border-blue-500 transition-colors"
+          >
             <option value="">Tất cả trạng thái</option>
             <option value="active">Đang hoạt động</option>
             <option value="inactive">Đang bị khóa</option>
@@ -153,7 +159,11 @@ export default function UserAdminPage() {
           </select>
         </div>
 
-        {loading && <div className="py-12 flex justify-center text-sm text-gray-500"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}
+        {loading && (
+          <div className="py-12 flex justify-center text-sm text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          </div>
+        )}
 
         {!loading && fetchFailed && (
           <div className="rounded-xl border border-red-100 bg-red-50 p-4">
@@ -181,10 +191,16 @@ export default function UserAdminPage() {
                   <tr key={item.id} className="border-t border-gray-100 hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <img src={item.avatar || "/admin/assets/images/user-placeholder.png"} alt={item.fullName} className="w-10 h-10 rounded-full object-cover border border-gray-200" onError={(e) => { (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(item.fullName) + "&background=random"; }} />
+                        <img
+                          src={item.avatar || "/admin/assets/images/user-placeholder.png"}
+                          alt={item.fullName}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(item.fullName) + "&background=random";
+                          }}
+                        />
                         <div>
                           <div className="font-semibold text-gray-800">{item.fullName}</div>
-                          <div className="text-xs text-gray-400 font-mono">{item.id}</div>
                         </div>
                       </div>
                     </td>
@@ -204,21 +220,21 @@ export default function UserAdminPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${item.status === "active" ? "bg-green-100 text-green-700" : item.status === "inactive" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${item.status === "active" ? "bg-green-100 text-green-700" : item.status === "inactive" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}`}
+                      >
                         {item.status === "active" ? "Hoạt động" : item.status === "inactive" ? "Đã khóa" : "Chờ kích hoạt"}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       {item.role !== "admin" && (
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           disabled={updatingId === item.id}
-                          onClick={() => handleToggleStatus(item)} 
+                          onClick={() => handleToggleStatus(item)}
                           title={item.status === "active" ? "Khóa tài khoản" : "Mở khóa tài khoản"}
                           className={`w-8 h-8 rounded-md flex items-center justify-center transition-colors ${
-                            item.status === "active" 
-                              ? "bg-red-100 text-red-600 hover:bg-red-200" 
-                              : "bg-green-100 text-green-600 hover:bg-green-200"
+                            item.status === "active" ? "bg-red-100 text-red-600 hover:bg-red-200" : "bg-green-100 text-green-600 hover:bg-green-200"
                           } ${updatingId === item.id ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                           {updatingId === item.id ? (

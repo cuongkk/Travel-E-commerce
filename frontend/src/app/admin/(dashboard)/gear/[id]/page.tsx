@@ -36,6 +36,7 @@ export default function GearEditPage() {
   const [loading, setLoading] = useState(true);
   const [fetchFailed, setFetchFailed] = useState(false);
   const [form, setForm] = useState<GearForm | null>(null);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const fetchDetail = async () => {
     if (!id) return;
@@ -98,6 +99,43 @@ export default function GearEditPage() {
     router.push("/admin/gear");
   };
 
+  const handleGenerateAIGear = async () => {
+    if (!form?.name.trim() || !form?.category.trim()) {
+      setReloadToast("error", "Vui lòng nhập tên gear và danh mục trước khi dùng AI");
+      showReloadToastIfAny();
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ type: "generate-description", subject: form.name, context: form.category }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data?.code !== "success") {
+        throw new Error(data?.message || "Lỗi khi gọi AI sinh mô tả");
+      }
+
+      setForm((prev) =>
+        prev
+          ? {
+              ...prev,
+              description: String(data?.data || prev.description),
+            }
+          : prev,
+      );
+    } catch (error: any) {
+      setReloadToast("error", error.message || "Không thể sinh mô tả gear bằng AI");
+      showReloadToastIfAny();
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-[#f5f6fa] p-4 md:p-8 space-y-4 md:space-y-5">
       <h1 className="text-2xl font-bold text-gray-800">Chỉnh sửa gear</h1>
@@ -115,6 +153,16 @@ export default function GearEditPage() {
 
       {!loading && !fetchFailed && form && (
         <div className="w-full rounded-xl bg-white border border-gray-100 shadow-sm p-4 md:p-6 space-y-3">
+          <div className="flex items-center justify-end">
+            <button
+              type="button"
+              onClick={handleGenerateAIGear}
+              disabled={isGeneratingAI}
+              className="h-9 px-3 rounded-lg text-sm font-semibold bg-linear-to-r from-emerald-500 to-teal-600 text-white hover:opacity-90 disabled:opacity-60"
+            >
+              {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
               value={form.name}

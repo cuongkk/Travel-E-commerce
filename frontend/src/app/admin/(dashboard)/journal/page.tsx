@@ -3,9 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FaPen, FaTrash } from "react-icons/fa6";
+import { FilePond, registerPlugin } from "react-filepond";
+import FilePondPluginImagePreview from "filepond-plugin-image-preview";
+import FilePondPluginFileValidateType from "filepond-plugin-file-validate-type";
 import { useAuth } from "@/hooks/useAuth";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 import { Editor } from "@tinymce/tinymce-react";
+
+registerPlugin(FilePondPluginImagePreview, FilePondPluginFileValidateType);
 
 type JournalItem = {
   id: string;
@@ -27,6 +32,17 @@ type JournalForm = {
   avatar: string;
   trendingScore: string;
   status: "active" | "inactive";
+};
+
+const JOURNAL_TAG_OPTIONS = ["Kinh nghiệm du lịch", "Lịch trình gợi ý", "Điểm đến nổi bật", "Ẩm thực địa phương", "Mẹo tiết kiệm", "Cẩm nang hành trình"];
+
+const toDataUrl = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Không thể đọc tệp ảnh"));
+    reader.readAsDataURL(file);
+  });
 };
 
 const defaultForm: JournalForm = {
@@ -53,6 +69,8 @@ export default function JournalAdminPage() {
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [avatarFiles, setAvatarFiles] = useState<File[]>([]);
   const tinyMceApiKey = process.env.NEXT_PUBLIC_TINYMCE || "";
 
   useEffect(() => {
@@ -113,11 +131,33 @@ export default function JournalAdminPage() {
   }, [rows, keyword, statusFilter]);
 
   const submitCreate = async () => {
+    if (!form.title.trim() || !form.tag.trim() || !form.author.trim() || !form.dateLabel.trim()) {
+      setReloadToast("error", "Vui lòng nhập đủ Tiêu đề, Tag, Tác giả và Ngày hiển thị");
+      showReloadToastIfAny();
+      return;
+    }
+
+    let payload: JournalForm = { ...form };
+
+    try {
+      if (imageFiles.length > 0) {
+        payload = { ...payload, image: await toDataUrl(imageFiles[0]) };
+      }
+
+      if (avatarFiles.length > 0) {
+        payload = { ...payload, avatar: await toDataUrl(avatarFiles[0]) };
+      }
+    } catch (error: any) {
+      setReloadToast("error", error.message || "Không thể xử lý ảnh upload");
+      showReloadToastIfAny();
+      return;
+    }
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/journal/create`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify(payload),
     });
     const data = await response.json();
 
@@ -130,13 +170,15 @@ export default function JournalAdminPage() {
     setReloadToast("success", data?.message || "Tạo journal thành công");
     showReloadToastIfAny();
     setForm(defaultForm);
+    setImageFiles([]);
+    setAvatarFiles([]);
     setShowCreate(false);
     await fetchData();
   };
 
   const handleGenerateAI = async () => {
     if (!form.title.trim() || !form.tag.trim()) {
-      alert("Vui lòng nhập Tiêu đề và Tag trước khi dùng AI sinh nội dung!");
+      alert("Vui lòng nhập tiêu đề và tag trước khi dùng AI!");
       return;
     }
 
@@ -146,12 +188,12 @@ export default function JournalAdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ type: "journal-content", title: form.title, category: form.tag }),
+        body: JSON.stringify({ type: "generate-description", subject: form.title, context: form.tag }),
       });
       const data = await res.json();
 
       if (!res.ok || data.code !== "success") {
-        throw new Error(data.message || "Lỗi khi gọi API sinh nội dung");
+        throw new Error(data.message || "Lỗi khi gọi AI sinh mô tả");
       }
 
       if (data.data) {
@@ -210,8 +252,12 @@ export default function JournalAdminPage() {
           <button type="button" onClick={() => setShowCreate((prev) => !prev)} className="h-10 px-4 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700">
             {showCreate ? "Đóng form" : "Thêm mới"}
           </button>
-          
-          <button type="button" onClick={() => router.push('/admin/journal/trash')} className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200">
+
+          <button
+            type="button"
+            onClick={() => router.push("/admin/journal/trash")}
+            className="h-10 px-4 flex items-center gap-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-semibold hover:bg-gray-200"
+          >
             <FaTrash /> Thùng rác
           </button>
         </div>
@@ -224,7 +270,14 @@ export default function JournalAdminPage() {
               placeholder="Tiêu đề"
               className="h-10 px-3 rounded-lg border border-gray-200 text-sm md:col-span-2"
             />
-            <input value={form.tag} onChange={(event) => setForm((prev) => ({ ...prev, tag: event.target.value }))} placeholder="Tag" className="h-10 px-3 rounded-lg border border-gray-200 text-sm" />
+            <select value={form.tag} onChange={(event) => setForm((prev) => ({ ...prev, tag: event.target.value }))} className="h-10 px-3 rounded-lg border border-gray-200 text-sm">
+              <option value="">-- Chọn tag --</option>
+              {JOURNAL_TAG_OPTIONS.map((tagOption) => (
+                <option key={tagOption} value={tagOption}>
+                  {tagOption}
+                </option>
+              ))}
+            </select>
             <input
               value={form.author}
               onChange={(event) => setForm((prev) => ({ ...prev, author: event.target.value }))}
@@ -232,9 +285,9 @@ export default function JournalAdminPage() {
               className="h-10 px-3 rounded-lg border border-gray-200 text-sm"
             />
             <input
+              type="date"
               value={form.dateLabel}
               onChange={(event) => setForm((prev) => ({ ...prev, dateLabel: event.target.value }))}
-              placeholder="Ngày hiển thị (vd: 24/10/2024)"
               className="h-10 px-3 rounded-lg border border-gray-200 text-sm"
             />
             <input
@@ -253,18 +306,45 @@ export default function JournalAdminPage() {
               <option value="active">Hoạt động</option>
               <option value="inactive">Dừng hoạt động</option>
             </select>
-            <input
-              value={form.image}
-              onChange={(event) => setForm((prev) => ({ ...prev, image: event.target.value }))}
-              placeholder="URL ảnh bài viết"
-              className="h-10 px-3 rounded-lg border border-gray-200 text-sm md:col-span-2"
-            />
-            <input
-              value={form.avatar}
-              onChange={(event) => setForm((prev) => ({ ...prev, avatar: event.target.value }))}
-              placeholder="URL avatar tác giả"
-              className="h-10 px-3 rounded-lg border border-gray-200 text-sm md:col-span-2"
-            />
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Ảnh bài viết</label>
+                <div className="avatar-pond">
+                  <FilePond
+                    files={imageFiles}
+                    onupdatefiles={(items) => {
+                      const nextFiles = items.map((item) => item.file as File);
+                      setImageFiles(nextFiles);
+                    }}
+                    allowMultiple={false}
+                    maxFiles={1}
+                    acceptedFileTypes={["image/*"]}
+                    name="image"
+                    imagePreviewHeight={180}
+                    labelIdle='Kéo thả ảnh hoặc <span class="filepond--label-action">chọn file</span>'
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Ảnh tác giả</label>
+                <div className="avatar-pond">
+                  <FilePond
+                    files={avatarFiles}
+                    onupdatefiles={(items) => {
+                      const nextFiles = items.map((item) => item.file as File);
+                      setAvatarFiles(nextFiles);
+                    }}
+                    allowMultiple={false}
+                    maxFiles={1}
+                    acceptedFileTypes={["image/*"]}
+                    name="avatar"
+                    imagePreviewHeight={180}
+                    labelIdle='Kéo thả ảnh hoặc <span class="filepond--label-action">chọn file</span>'
+                  />
+                </div>
+              </div>
+            </div>
             <div className="md:col-span-2 space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-medium text-gray-700">Nội dung bài viết (Tóm tắt)</label>
@@ -272,9 +352,9 @@ export default function JournalAdminPage() {
                   type="button"
                   onClick={handleGenerateAI}
                   disabled={isGeneratingAI}
-                  className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+                  className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-linear-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
                 >
-                  {isGeneratingAI ? "Đang sinh bài SEO..." : "✨ AI Viết bài SEO"}
+                  {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
                 </button>
               </div>
               <Editor
@@ -311,8 +391,8 @@ export default function JournalAdminPage() {
         )}
 
         {!loading && !fetchFailed && (
-          <div className="overflow-auto rounded-xl border border-gray-100">
-            <table className="w-full min-w-[900px] text-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-100">
+            <table className="w-full min-w-225 text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-4 py-3 font-semibold text-gray-600">Tiêu đề</th>
@@ -339,10 +419,18 @@ export default function JournalAdminPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button type="button" onClick={() => router.push(`/admin/journal/${item.id}`)} className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => router.push(`/admin/journal/${item.id}`)}
+                          className="w-8 h-8 rounded-md bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center"
+                        >
                           <FaPen />
                         </button>
-                        <button type="button" onClick={() => handleDelete(item.id, item.title)} className="w-8 h-8 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id, item.title)}
+                          className="w-8 h-8 rounded-md bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center"
+                        >
                           <FaTrash />
                         </button>
                       </div>

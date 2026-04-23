@@ -41,6 +41,7 @@ export default function CategoryEdit({ detail, categoryOptions, onSubmit, onCanc
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const options = useMemo(() => flattenOptions(categoryOptions).filter((item) => item.id !== detail.id), [categoryOptions, detail.id]);
 
@@ -81,6 +82,36 @@ export default function CategoryEdit({ detail, categoryOptions, onSubmit, onCanc
       setErrors((prev) => ({ ...prev, submit: error.message || "Đã có lỗi xảy ra" }));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    if (!form.name.trim()) {
+      setErrors((prev) => ({ ...prev, name: "Vui lòng nhập tên danh mục trước khi dùng AI" }));
+      return;
+    }
+
+    const parentLabel = options.find((item) => item.id === form.parent)?.label.replace(/^—\s*/g, "") || "";
+
+    try {
+      setIsGeneratingAI(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "generate-description", subject: form.name.trim(), context: parentLabel || undefined }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || data?.code !== "success") {
+        throw new Error(data?.message || "Không thể sinh mô tả bằng AI");
+      }
+
+      setForm((prev) => ({ ...prev, description: String(data?.data || "") }));
+    } catch (error: any) {
+      setErrors((prev) => ({ ...prev, submit: error.message || "Không thể sinh mô tả bằng AI" }));
+    } finally {
+      setIsGeneratingAI(false);
     }
   };
 
@@ -134,6 +165,26 @@ export default function CategoryEdit({ detail, categoryOptions, onSubmit, onCanc
               <option value="inactive">Tạm dừng</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <label className="block text-sm font-medium text-gray-700">Mô tả danh mục</label>
+            <button
+              type="button"
+              onClick={handleGenerateAI}
+              disabled={isGeneratingAI}
+              className="h-8 px-3 rounded-lg text-xs font-semibold bg-linear-to-r from-sky-500 to-cyan-600 text-white hover:opacity-90 disabled:opacity-60"
+            >
+              {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
+            </button>
+          </div>
+          <textarea
+            value={form.description}
+            onChange={(event) => setValue("description", event.target.value)}
+            className="w-full min-h-24 px-3 py-2 rounded-lg border border-gray-200 outline-none focus:border-blue-500 text-sm"
+            placeholder="Nhập mô tả danh mục hoặc dùng AI gợi ý"
+          />
         </div>
 
         {errors.submit && <p className="text-sm text-red-500">{errors.submit}</p>}

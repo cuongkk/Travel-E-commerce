@@ -146,16 +146,8 @@ export default function TourEdit({ tour, categories, cities, onSubmit, onCancel 
 
   const handleGenerateAI = async () => {
     if (!form.name.trim()) {
-      alert("Vui lòng nhập Tên tour trước khi dùng AI sinh lịch trình!");
+      alert("Vui lòng nhập tên tour trước khi dùng AI!");
       return;
-    }
-    
-    let time = "3 ngày 2 đêm";
-    if (form.departureDate && form.endDate) {
-      const start = new Date(form.departureDate);
-      const end = new Date(form.endDate);
-      const diffDays = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      if (diffDays > 0) time = `${diffDays} ngày ${diffDays - 1 > 0 ? diffDays - 1 : 0} đêm`;
     }
 
     try {
@@ -164,15 +156,11 @@ export default function TourEdit({ tour, categories, cities, onSubmit, onCancel 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ type: "tour-schedule", name: form.name, time }),
+        body: JSON.stringify({ type: "generate-description", subject: form.name, context: categoryOptions.find((item) => item.id === form.category)?.label || "" }),
       });
       const data = await res.json();
-      if (!res.ok || data.code !== "success") throw new Error(data.message || "Lỗi khi gọi AI API");
-      if (Array.isArray(data.data) && data.data.length > 0) {
-        setValue("schedules", data.data);
-      } else {
-        alert("Kết quả trả về không hợp lệ, vui lòng thử lại.");
-      }
+      if (!res.ok || data.code !== "success") throw new Error(data.message || "Lỗi khi gọi AI sinh mô tả");
+      setValue("information", String(data.data || ""));
     } catch (e: any) {
       alert("Lỗi AI: " + e.message);
     } finally {
@@ -447,7 +435,17 @@ export default function TourEdit({ tour, categories, cities, onSubmit, onCancel 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Thông tin tour</label>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <label className="block text-sm font-medium text-gray-700">Thông tin tour</label>
+            <button
+              type="button"
+              onClick={handleGenerateAI}
+              disabled={isGeneratingAI}
+              className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-linear-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+            >
+              {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
+            </button>
+          </div>
           <Editor
             apiKey={tinyMceApiKey}
             value={form.information}
@@ -467,17 +465,9 @@ export default function TourEdit({ tour, categories, cities, onSubmit, onCancel 
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 gap-2">
             <label className="block text-sm font-medium text-gray-700">Lịch trình tour *</label>
             <div className="flex gap-2">
-              <button 
-                type="button" 
-                onClick={handleGenerateAI}
-                disabled={isGeneratingAI}
-                className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
-              >
-                {isGeneratingAI ? "Đang sinh..." : "✨ Sinh tự động AI"}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => setValue("schedules", [...form.schedules, { title: "", description: "" }])} 
+              <button
+                type="button"
+                onClick={() => setValue("schedules", [...form.schedules, { title: "", description: "" }])}
                 className="text-sm font-medium rounded-lg border border-blue-200 px-3 py-1.5 text-blue-600 hover:bg-blue-50"
               >
                 + Thêm lịch trình

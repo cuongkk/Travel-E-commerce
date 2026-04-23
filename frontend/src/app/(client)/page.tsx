@@ -5,6 +5,7 @@ import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa6";
 import { TourHero } from "@/components/features/tour/TourHero";
 import { TourList } from "@/components/features/tour/TourList";
+import { HomeAiChatbot } from "@/components/features/chat/HomeAiChatbot";
 import type { ApiResponse, DashboardToursData, PublicTour } from "@/types/client-api";
 import { setReloadToast, showReloadToastIfAny } from "@/utils/toast";
 
@@ -68,6 +69,8 @@ export default function HomePage() {
 
         <TourList tours={featuredTours} loading={loading} emptyMessage="Chưa có tour nổi bật." />
       </section>
+
+      <HomeAiChatbot />
     </main>
   );
 }

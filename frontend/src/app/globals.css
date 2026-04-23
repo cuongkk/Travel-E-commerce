@@ -12,7 +12,7 @@
 
 /* Font mặc định */
 body {
-  @apply bg-background text-on-surface font-body;
+  @apply bg-background text-on-surface font-body text-[14px] leading-6;
 }
 
 /* Reusable components */

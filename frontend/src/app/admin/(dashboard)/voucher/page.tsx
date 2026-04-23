@@ -128,19 +128,12 @@ export default function VoucherAdminPage() {
 
       <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 space-y-4">
         <div className="flex gap-4">
-          <input 
-            className="border px-4 py-2 rounded-lg flex-1 outline-none focus:border-blue-500" 
-            placeholder="Tìm theo mã hoặc tên..." 
-            value={keyword} onChange={(e) => setKeyword(e.target.value)} 
-          />
-          <button 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700"
-            onClick={() => setShowCreate(!showCreate)}
-          >
+          <input className="border px-4 py-2 rounded-lg flex-1 outline-none focus:border-blue-500" placeholder="Tìm theo mã hoặc tên..." value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+          <button className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700" onClick={() => setShowCreate(!showCreate)}>
             {showCreate ? "Đóng" : "Tạo mã mới"}
           </button>
-          <button 
-            onClick={() => router.push('/admin/voucher/trash')} 
+          <button
+            onClick={() => router.push("/admin/voucher/trash")}
             className="px-4 flex items-center justify-center gap-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-100"
           >
             <FaTrash /> Thùng rác
@@ -149,18 +142,37 @@ export default function VoucherAdminPage() {
 
         {showCreate && (
           <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg bg-gray-50">
-            <input placeholder="Mã giảm giá (VD: TET2024)" className="border px-4 py-2 rounded uppercase" value={form.code} onChange={(e) => setForm({...form, code: e.target.value.toUpperCase()})} />
-            <input placeholder="Tên chiến dịch" className="border px-4 py-2 rounded" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
-            <select className="border px-4 py-2 rounded" value={form.discountType} onChange={(e) => setForm({...form, discountType: e.target.value})}>
+            <input
+              placeholder="Mã giảm giá (VD: TET2024)"
+              className="border px-4 py-2 rounded uppercase"
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+            />
+            <input placeholder="Tên chiến dịch" className="border px-4 py-2 rounded" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <select className="border px-4 py-2 rounded" value={form.discountType} onChange={(e) => setForm({ ...form, discountType: e.target.value })}>
               <option value="percent">Giảm theo %</option>
               <option value="fixed">Giảm số tiền cố định</option>
             </select>
-            <input placeholder="Giá trị giảm" type="number" className="border px-4 py-2 rounded" value={form.discountValue} onChange={(e) => setForm({...form, discountValue: e.target.value})} />
-            <input placeholder="Đơn hàng tối thiểu (VD: 500000)" type="number" className="border px-4 py-2 rounded" value={form.minOrderValue} onChange={(e) => setForm({...form, minOrderValue: e.target.value})} />
-            <input placeholder="Số lượng tối đa (Bỏ trống = không giới hạn)" type="number" className="border px-4 py-2 rounded" value={form.maxUsage} onChange={(e) => setForm({...form, maxUsage: e.target.value})} />
-            <input placeholder="Ngày hết hạn" type="datetime-local" className="border px-4 py-2 rounded" value={form.expiresAt} onChange={(e) => setForm({...form, expiresAt: e.target.value})} />
+            <input placeholder="Giá trị giảm" type="number" className="border px-4 py-2 rounded" value={form.discountValue} onChange={(e) => setForm({ ...form, discountValue: e.target.value })} />
+            <input
+              placeholder="Đơn hàng tối thiểu (VD: 500000)"
+              type="number"
+              className="border px-4 py-2 rounded"
+              value={form.minOrderValue}
+              onChange={(e) => setForm({ ...form, minOrderValue: e.target.value })}
+            />
+            <input
+              placeholder="Số lượng tối đa (Bỏ trống = không giới hạn)"
+              type="number"
+              className="border px-4 py-2 rounded"
+              value={form.maxUsage}
+              onChange={(e) => setForm({ ...form, maxUsage: e.target.value })}
+            />
+            <input placeholder="Ngày hết hạn" type="datetime-local" className="border px-4 py-2 rounded" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} />
             <div className="col-span-2">
-              <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 w-full font-bold" onClick={submitCreate}>Lưu mã giảm giá</button>
+              <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 w-full font-bold" onClick={submitCreate}>
+                Lưu mã giảm giá
+              </button>
             </div>
           </div>
         )}
@@ -185,7 +197,7 @@ export default function VoucherAdminPage() {
                   <td className="p-3">{row.name}</td>
                   <td className="p-3">{row.discountType === "percent" ? `${row.discountValue}%` : formatMoney(row.discountValue)}</td>
                   <td className="p-3 text-xs">
-                    Min: {formatMoney(row.minOrderValue || 0)} <br/>
+                    Min: {formatMoney(row.minOrderValue || 0)} <br />
                     Dùng: {row.usedCount || 0} / {row.maxUsage || "∞"}
                   </td>
                   <td className="p-3 text-red-500">{new Date(row.expiresAt).toLocaleDateString("vi-VN")}</td>
@@ -203,7 +215,9 @@ export default function VoucherAdminPage() {
               ))}
               {filteredRows.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={7} className="text-center p-6 text-gray-500">Không có dữ liệu</td>
+                  <td colSpan={7} className="text-center p-6 text-gray-500">
+                    Không có dữ liệu
+                  </td>
                 </tr>
               )}
             </tbody>

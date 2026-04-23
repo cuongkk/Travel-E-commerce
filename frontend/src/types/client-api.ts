@@ -60,6 +60,34 @@ export type DashboardTourDetailData = {
   tour: PublicTour | null;
 };
 
+export type ChatbotTourSuggestion = {
+  id: string;
+  name: string;
+  slug: string;
+  avatar: string;
+  information: string;
+  time: string;
+  price: number;
+  priceNew: number;
+  locationNames: string[];
+  categoryName: string;
+  reason: string;
+};
+
+export type ChatbotAiJson = {
+  reply: string;
+  matches: Array<{
+    slug?: string;
+    name?: string;
+    reason?: string;
+  }>;
+};
+
+export type ChatbotData = {
+  aiJson: ChatbotAiJson;
+  suggestions: ChatbotTourSuggestion[];
+};
+
 export type CartItem = {
   tourId: string;
   quantity: number;

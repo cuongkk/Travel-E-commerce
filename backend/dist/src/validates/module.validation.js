@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.editTourBodySchema = exports.createTourBodySchema = exports.revenueChartBodySchema = exports.cartTourIdParamSchema = exports.cartUpdateQuantityBodySchema = exports.cartAddItemBodySchema = exports.cartRenderBodySchema = exports.deleteCodeBodySchema = exports.changeMultiBodySchema = void 0;
+exports.editTourBodySchema = exports.createTourBodySchema = exports.aiChatbotBodySchema = exports.revenueChartBodySchema = exports.cartTourIdParamSchema = exports.cartUpdateQuantityBodySchema = exports.cartAddItemBodySchema = exports.cartRenderBodySchema = exports.deleteCodeBodySchema = exports.changeMultiBodySchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 const jsonArrayStringSchema = joi_1.default.string().custom((value, helpers) => {
     try {
@@ -50,6 +50,10 @@ exports.revenueChartBodySchema = joi_1.default.object({
     previousMonth: joi_1.default.number().integer().min(1).max(12).required(),
     previousYear: joi_1.default.number().integer().min(1970).required(),
     arrayDay: joi_1.default.array().items(joi_1.default.number().integer().min(1).max(31)).min(1).required(),
+}).required();
+exports.aiChatbotBodySchema = joi_1.default.object({
+    message: joi_1.default.string().trim().min(2).max(1000).required(),
+    limit: joi_1.default.number().integer().min(1).max(5).default(3),
 }).required();
 exports.createTourBodySchema = joi_1.default.object({
     name: joi_1.default.string().trim().min(1).max(255).required(),

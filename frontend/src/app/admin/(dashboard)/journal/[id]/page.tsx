@@ -105,7 +105,7 @@ export default function JournalEditPage() {
 
   const handleGenerateAI = async () => {
     if (!form?.title.trim() || !form?.tag.trim()) {
-      alert("Vui lòng nhập Tiêu đề và Tag trước khi dùng AI sinh nội dung!");
+      alert("Vui lòng nhập tiêu đề và tag trước khi dùng AI!");
       return;
     }
 
@@ -115,12 +115,12 @@ export default function JournalEditPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ type: "journal-content", title: form.title, category: form.tag }),
+        body: JSON.stringify({ type: "generate-description", subject: form.title, context: form.tag }),
       });
       const data = await res.json();
 
       if (!res.ok || data.code !== "success") {
-        throw new Error(data.message || "Lỗi khi gọi API sinh nội dung");
+        throw new Error(data.message || "Lỗi khi gọi AI sinh mô tả");
       }
 
       if (data.data) {
@@ -164,9 +164,9 @@ export default function JournalEditPage() {
                 type="button"
                 onClick={handleGenerateAI}
                 disabled={isGeneratingAI}
-                className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
+                className="text-sm font-semibold rounded-lg px-3 py-1.5 bg-linear-to-r from-purple-500 to-indigo-600 text-white shadow-sm hover:scale-105 transition-transform disabled:opacity-50"
               >
-                {isGeneratingAI ? "Đang sinh bài SEO..." : "✨ AI Viết bài SEO"}
+                {isGeneratingAI ? "Đang sinh mô tả..." : "AI sinh mô tả"}
               </button>
             </div>
             <Editor
