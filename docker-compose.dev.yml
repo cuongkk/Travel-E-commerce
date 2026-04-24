@@ -1,0 +1,52 @@
+# docker-compose.dev.yml — Development mode with hot reload
+# Usage: docker compose -f docker-compose.dev.yml up --build
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: travelka-backend-dev
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+    volumes:
+      # Mount source code for hot reload
+      - ./backend:/app
+      # Keep node_modules from inside container (don't overwrite with host's)
+      - /app/node_modules
+    restart: unless-stopped
+    networks:
+      - travelka-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: travelka-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_TINYMCE=9qo3okjxw8ves2sqf65pbd5cdzh7r0gfvi1ofdc95wbrzv5q
+      - WATCHPACK_POLLING=true   # Required for file watching inside Docker on Windows
+      - CHOKIDAR_USEPOLLING=true # Fallback file watcher for Windows/WSL
+    volumes:
+      # Mount source code for hot reload
+      - ./frontend:/app
+      # Keep node_modules and .next from inside container
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - travelka-network
+
+networks:
+  travelka-network:
+    driver: bridge

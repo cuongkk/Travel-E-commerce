@@ -3117,6 +3117,10 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
+"travelka@file:..":
+  version "1.0.0"
+  resolved "file:.."
+
 ts-api-utils@^2.5.0:
   version "2.5.0"
   resolved "https://registry.npmjs.org/ts-api-utils/-/ts-api-utils-2.5.0.tgz"

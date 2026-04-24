@@ -1,27 +1,16 @@
 {
-  "name": "Project-5",
+  "name": "travelka",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "TravelKa — Full-stack travel booking platform",
+  "private": true,
   "license": "MIT",
   "scripts": {
-    "start": "nodemon --inspect index.js"
+    "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "build": "npm run build --prefix backend && npm run build --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "seed": "npm run seed --prefix backend"
   },
-  "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cloudinary": "^2.9.0",
-    "cookie-parser": "^1.4.7",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "joi": "^18.0.2",
-    "jsonwebtoken": "^9.0.3",
-    "moment": "^2.30.1",
-    "mongoose": "^8.19.3",
-    "mongoose-slug-updater": "^3.3.0",
-    "multer": "^2.0.2",
-    "multer-storage-cloudinary": "^4.0.0",
-    "nodemailer": "^7.0.12",
-    "nodemon": "^3.1.10",
-    "pug": "^3.0.3",
-    "slugify": "^1.6.6"
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }

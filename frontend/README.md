@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TravelKa — Frontend (Next.js)
+
+Giao diện người dùng của **TravelKa**, xây dựng bằng Next.js 16 App Router, Tailwind CSS và TypeScript.
+
+## Tech Stack
+
+- **Next.js 16** — App Router, Server Components, Streaming
+- **TypeScript** — Type-safe development
+- **Tailwind CSS v4** — Utility-first styling
+- **MUI (Material UI)** — Admin UI components
+- **SWR** — Data fetching & caching
+- **React Hook Form** — Form management
+- **TinyMCE** — Rich text editor
+- **Chart.js** — Analytics charts
+- **Sonner** — Toast notifications
+- **Swiper** — Touch-enabled sliders
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
+# Cài đặt dependencies
+yarn install
+
+# Tạo file môi trường
+cp .env.example .env.local
+# → Điền NEXT_PUBLIC_API_URL vào .env.local
+
+# Chạy development server
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> Mở [http://localhost:3000](http://localhost:3000) trên trình duyệt.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Lệnh | Mô tả |
+|---|---|
+| `yarn dev` | Khởi chạy development server |
+| `yarn build` | Build production bundle |
+| `yarn start` | Chạy production server |
+| `yarn lint` | Kiểm tra lỗi ESLint |
 
-## Learn More
+## Cấu trúc thư mục
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/
+│   ├── (client)/          # Trang dành cho người dùng
+│   │   ├── (homepage)/    # Trang chủ
+│   │   ├── (dashboard)/   # Checkout, giỏ hàng, đơn hàng
+│   │   └── tour/          # Chi tiết tour
+│   ├── admin/             # Dashboard quản trị
+│   │   ├── tours/
+│   │   ├── orders/
+│   │   ├── users/
+│   │   └── ...
+│   ├── globals.css
+│   └── layout.tsx
+├── components/
+│   ├── features/          # Feature-specific components
+│   ├── layout/            # Header, Footer, Sidebar
+│   └── ui/                # Shared UI (Button, Modal, ...)
+├── hooks/                 # Custom React hooks
+├── interfaces/            # TypeScript interfaces
+└── utils/                 # Helper functions, API calls
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Biến môi trường
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```

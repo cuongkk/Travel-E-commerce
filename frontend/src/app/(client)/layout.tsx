@@ -3,8 +3,8 @@ import { Header } from "../../components/layout/Header";
 import { Footer } from "../../components/layout/Footer";
 import ToastProvider from "../../components/ui/ToastProvider";
 export const metadata: Metadata = {
-  title: "TravelKa - Trải nghiệm hành trình tuyệt vời",
-  description: "TravelKa - Nền tảng đặt tour du lịch hàng đầu",
+  title: "Travelka - Du lịch Việt Nam",
+  description: "Travelka - Du lịch Việt Nam",
 };
 
 export default async function RootLayout({

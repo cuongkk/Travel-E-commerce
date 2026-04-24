@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: travelka-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - travelka-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:5000
+        - NEXT_PUBLIC_TINYMCE=9qo3okjxw8ves2sqf65pbd5cdzh7r0gfvi1ofdc95wbrzv5q
+    container_name: travelka-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - travelka-network
+
+networks:
+  travelka-network:
+    driver: bridge

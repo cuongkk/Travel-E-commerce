@@ -35,7 +35,8 @@
     "sonner": "^2.0.7",
     "swiper": "^12.1.3",
     "swr": "^2.4.1",
-    "tinymce": "^8.4.0"
+    "tinymce": "^8.4.0",
+    "travelka": "file:.."
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

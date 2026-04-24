@@ -99,16 +99,10 @@ const JOURNAL_DATA = [
 ];
 
 // ──────────────────────────────────────────────
-// 5a. ADMIN ACCOUNT
-// ──────────────────────────────────────────────
-const ADMIN_DATA = [
-  { fullName: "Nguyễn Admin", email: "ntuancuong2005@gmail.com", phone: "0328228324" },
-];
-
-// ──────────────────────────────────────────────
-// 5b. ACCOUNTS (Client users)
+// 5. ACCOUNTS (Client users)
 // ──────────────────────────────────────────────
 const ACCOUNT_DATA = [
+  { fullName: "Nguyễn Admin", email: "ntuancuong2005@gmail.com", phone: "0328228324" },
   { fullName: "Nguyễn Văn An", email: "an.nguyen@gmail.com", phone: "0901234567" },
   { fullName: "Trần Thị Bích", email: "bich.tran@gmail.com", phone: "0912345678" },
   { fullName: "Lê Minh Cường", email: "cuong.le@gmail.com", phone: "0923456789" },
@@ -136,20 +130,6 @@ async function main() {
   log("🔗 Connecting to database...");
   await mongoose.connect(uri);
   log("✅ Connected!\n");
-
-  // ────── CLEAN ALL DATA ──────
-  section("0/8  XÓA TOÀN BỘ DỮ LIỆU CŨ");
-  await Promise.all([
-    Category.deleteMany({}),
-    Tour.deleteMany({}),
-    Gear.deleteMany({}),
-    Journal.deleteMany({}),
-    Account.deleteMany({}),
-    Voucher.deleteMany({}),
-    Order.deleteMany({}),
-    Review.deleteMany({}),
-  ]);
-  log("   ✅ Đã xóa sạch tất cả collections!");
 
   // ────── CATEGORIES ──────
   section("1/8  CATEGORIES");
@@ -236,32 +216,10 @@ async function main() {
     log(`   ✅ Created: ${j.title.substring(0, 40)}...`);
   }
 
-  // ────── ADMIN ACCOUNTS ──────
-  section("5a/8  ADMIN ACCOUNTS");
-  const hashedPass = await bcrypt.hash("Ccuong123", 10);
-
-  for (const adm of ADMIN_DATA) {
-    const existing = await Account.findOne({ email: adm.email });
-    if (existing) {
-      log(`   ↷  Skip (admin): ${adm.email}`);
-      continue;
-    }
-    const slug = makeSlug(adm.fullName);
-    await Account.create({
-      ...adm,
-      password: hashedPass,
-      role: "admin",
-      status: "active",
-      slug,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${slug}`,
-      deleted: false,
-    });
-    log(`   ✅ Created admin: ${adm.email}`);
-  }
-
-  // ────── CLIENT ACCOUNTS ──────
-  section("5b/8  CLIENT ACCOUNTS");
+  // ────── ACCOUNTS ──────
+  section("5/8  CLIENT ACCOUNTS");
   const accountIds: string[] = [];
+  const hashedPass = await bcrypt.hash("Ccuong123", 10);
 
   for (const acc of ACCOUNT_DATA) {
     const existing = await Account.findOne({ email: acc.email });
@@ -490,7 +448,7 @@ async function main() {
   console.log(`║  ⭐ Reviews      : ${String(totalReviews).padEnd(27)}║`);
   console.log(`║  💰 Doanh thu    : ${((revenueAgg[0]?.total || 0) / 1e6).toFixed(1)}M đ${" ".repeat(22)}║`);
   console.log("╠═══════════════════════════════════════════════╣");
-  console.log("║  🔑 Mật khẩu accounts: Ccuong123             ║");
+  console.log("║  🔑 Mật khẩu accounts: TravelKa@123          ║");
   console.log("╚═══════════════════════════════════════════════╝\n");
 
   await mongoose.disconnect();
@@ -502,4 +460,3 @@ main().catch((err) => {
   console.error("❌ Seed failed:", err.message);
   process.exit(1);
 });
-

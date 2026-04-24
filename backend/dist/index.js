@@ -15,7 +15,7 @@ const error_middleware_1 = require("./src/middlewares/error.middleware");
 dotenv_1.default.config();
 void (0, database_config_1.connectDB)();
 const app = (0, express_1.default)();
-const port = 5000;
+const port = process.env.PORT || 5000;
 app.use((0, cors_1.default)({
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",").map((s) => s.trim()) : "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
@@ -31,9 +31,20 @@ app.use((0, express_rate_limit_1.default)({
 }));
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
+// Health check — always public
+app.get("/health", (_req, res) => {
+    res.json({
+        status: "ok",
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+    });
+});
 app.use("/", index_route_1.default);
 app.use(error_middleware_1.notFoundHandler);
 app.use(error_middleware_1.errorHandler);
 app.listen(port, () => {
-    console.log(`Website đang chạy trên cổng ${port}`);
+    console.log(`🚀 TravelKa API is running at http://localhost:${port}`);
+    console.log(`🏥 Health check: http://localhost:${port}/health`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });

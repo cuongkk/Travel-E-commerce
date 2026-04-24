@@ -87,7 +87,6 @@ export function HomeAiChatbot() {
           </span>
           <div>
             <h3 className="text-lg font-bold">AI Tour Chatbot</h3>
-            <p className="text-sm text-on-surface-variant">Nhap yeu cau de nhan goi y tour dang JSON + card tour co the click.</p>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ dotenv.config();
 void connectDB();
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 app.use(
   cors({
@@ -35,11 +35,23 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// Health check — always public
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
+});
+
 app.use("/", router);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`Website đang chạy trên cổng ${port}`);
+  console.log(`🚀 TravelKa API is running at http://localhost:${port}`);
+  console.log(`🏥 Health check: http://localhost:${port}/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
 });
